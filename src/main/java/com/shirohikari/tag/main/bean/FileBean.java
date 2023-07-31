@@ -3,24 +3,28 @@ package com.shirohikari.tag.main.bean;
 import java.util.ArrayList;
 
 public class FileBean {
-    private Long offset;
+    private Integer id;
     private String path;
     private String description;
     private ArrayList<String> tagList;
 
-    public FileBean(Long offset, String path, String description, ArrayList<String> tagList) {
-        this.offset = offset;
+    public FileBean(String path, String description, ArrayList<String> tagList) {
+        this(null,path,description,tagList);
+    }
+
+    public FileBean(Integer id, String path, String description, ArrayList<String> tagList) {
+        this.id = id;
         this.path = path;
         this.description = description;
         this.tagList = tagList;
     }
 
-    public Long getOffset() {
-        return offset;
+    public Integer getId() {
+        return id;
     }
 
-    public void setOffset(Long offset) {
-        this.offset = offset;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getPath() {
@@ -50,7 +54,7 @@ public class FileBean {
     @Override
     public String toString() {
         return "FileBean{" +
-                "offset=" + offset +
+                "id=" + id +
                 ", path='" + path + '\'' +
                 ", description='" + description + '\'' +
                 ", tagList=" + tagList +

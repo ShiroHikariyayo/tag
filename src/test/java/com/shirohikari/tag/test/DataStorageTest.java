@@ -20,16 +20,13 @@ public class DataStorageTest {
         ArrayList<String> l = new ArrayList<>();
         l.add("t1");
         l.add("t2");
-//        d.addFileRecord(new FileBean(1L,"E:\\test\\1","bean1",l));
-        for (long i = 2;i<=90000;i++){
-            d.addFileRecord(new FileBean(i,"E:\\test\\"+i,"bean"+i,l));
-        }
+        d.addFileRecord(new FileBean("E:\\test\\1","bean1",l));
     }
 
-    @Test
-    public void getFileRecord() throws IOException {
-        DataStorage d = DataStorage.create("E:\\test");
-        d.getFileRecord(8335099);
-    }
+//    @Test
+//    public void getFileRecord() throws IOException {
+//        DataStorage d = DataStorage.create("E:\\test");
+//        d.getFileRecord(8335099);
+//    }
 
 }

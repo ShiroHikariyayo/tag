@@ -16,21 +16,19 @@ public class DataStorage {
     private static final String TAG_TABLE = "tag_table";
     private static final String FILE_TABLE = "file_table";
 
-    private long fileOffset;
-    private boolean fileRead;
-    private boolean tagRead;
+    private int nextId;
+    private long fileEndOffset;
     private File dir;
     private File tabTable;
     private File fileTable;
-    private HashMap<Long,String> offsetFileJSONMap;
-    private HashMap<String,Long> fileJSONOffsetMap;
+    private HashMap<Integer,Long> idOffsetMap;
+    private HashMap<Integer,FileBean> idFileBeanMap;
+    private HashMap<String,FileBean> pathFileBeanMap;
     private RandomAccessFile tabRAF;
     private RandomAccessFile fileRAF;
     private Gson gson;
 
     private DataStorage(File dir,File tabTable,File fileTable) throws IOException {
-        this.tagRead = true;
-        this.fileRead = true;
         this.dir = dir;
         this.tabTable = tabTable;
         this.fileTable = fileTable;
@@ -54,27 +52,39 @@ public class DataStorage {
         gson = new Gson();
         tabRAF = new RandomAccessFile(tabTable,"rw");
         fileRAF = new RandomAccessFile(fileTable,"rw");
-        offsetFileJSONMap = new HashMap<>();
-        fileJSONOffsetMap = new HashMap<>();
+        idOffsetMap = new HashMap<>();
+        idFileBeanMap = new HashMap<>();
+        pathFileBeanMap = new HashMap<>();
         while (fileRAF.getFilePointer() < fileRAF.length()){
             long offset = fileRAF.getFilePointer();
             String json = fileRAF.readUTF();
-            offsetFileJSONMap.put(offset,json);
-            fileJSONOffsetMap.put(json,offset);
+            FileBean bean = gson.fromJson(json,FileBean.class);
+            nextId = bean.getId() + 1;
+            idOffsetMap.put(bean.getId(),offset);
+            idFileBeanMap.put(bean.getId(),bean);
+            pathFileBeanMap.put(bean.getPath(),bean);
         }
-        fileOffset = fileRAF.length();
+        System.gc();
+        fileEndOffset = fileRAF.length();
     }
 
-    public FileBean getFileRecord(long id) throws IOException {
-        String json = offsetFileJSONMap.get(id);
-        System.out.println(json);
-        return gson.fromJson(json,FileBean.class);
+    public boolean hasTag(String path){
+        return pathFileBeanMap.containsKey(path);
+    }
+
+    public FileBean getFileBean(String path) throws IOException {
+        return pathFileBeanMap.get(path);
     }
 
     public void addFileRecord(FileBean bean) throws IOException {
-        bean.setOffset(fileOffset);
+        if(bean == null){
+            throw new IOException("不允许插入null数据");
+        } else if(bean.getId() != null){
+            throw new IOException("插入时不允许手动设置FileBean的id");
+        }
+        bean.setId(nextId++);
         String json = gson.toJson(bean);
-        fileOffset += json.getBytes().length + 2;
+        fileEndOffset += json.getBytes().length + 2;
         fileRAF.writeUTF(json);
     }
 

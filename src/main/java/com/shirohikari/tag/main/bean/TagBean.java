@@ -4,11 +4,11 @@ import java.util.ArrayList;
 
 public class TagBean {
     private String tag;
-    private ArrayList<Long> offsetList;
+    private ArrayList<Integer> idList;
 
-    public TagBean(String tag, ArrayList<Long> offsetList) {
+    public TagBean(String tag, ArrayList<Integer> idList) {
         this.tag = tag;
-        this.offsetList = offsetList;
+        this.idList = idList;
     }
 
     public String getTag() {
@@ -19,19 +19,19 @@ public class TagBean {
         this.tag = tag;
     }
 
-    public ArrayList<Long> getOffsetList() {
-        return offsetList;
+    public ArrayList<Integer> getIdList() {
+        return idList;
     }
 
-    public void setOffsetList(ArrayList<Long> offsetList) {
-        this.offsetList = offsetList;
+    public void setIdList(ArrayList<Integer> idList) {
+        this.idList = idList;
     }
 
     @Override
     public String toString() {
         return "TagBean{" +
                 "tag='" + tag + '\'' +
-                ", offsetList=" + offsetList +
+                ", idList=" + idList +
                 '}';
     }
 }
