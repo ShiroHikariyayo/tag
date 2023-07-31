@@ -5,9 +5,7 @@ import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.util.FileUtil;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.HashMap;
-import java.util.HashSet;
 
 /**
  * @author 20637
@@ -55,14 +53,13 @@ public class DataStorage {
         idOffsetMap = new HashMap<>();
         idFileBeanMap = new HashMap<>();
         pathFileBeanMap = new HashMap<>();
+        //读取file_table信息
         while (fileRAF.getFilePointer() < fileRAF.length()){
             long offset = fileRAF.getFilePointer();
             String json = fileRAF.readUTF();
             FileBean bean = gson.fromJson(json,FileBean.class);
             nextId = bean.getId() + 1;
-            idOffsetMap.put(bean.getId(),offset);
-            idFileBeanMap.put(bean.getId(),bean);
-            pathFileBeanMap.put(bean.getPath(),bean);
+            setMaps(bean,offset);
         }
         System.gc();
         fileEndOffset = fileRAF.length();
@@ -83,12 +80,30 @@ public class DataStorage {
             throw new IOException("插入时不允许手动设置FileBean的id");
         }
         bean.setId(nextId++);
+        setMaps(bean,fileEndOffset);
         String json = gson.toJson(bean);
         fileEndOffset += json.getBytes().length + 2;
         fileRAF.writeUTF(json);
     }
 
     public void updateFileRecord(FileBean bean) throws IOException {
+        if(bean == null || bean.getId() == null){
+            throw new IOException("需要指定FileBean及其id");
+        }else if(!idFileBeanMap.containsKey(bean.getId())){
+            throw new IOException("未发现相应记录");
+        }
+        long offset = idOffsetMap.get(bean.getId());
+        fileRAF.seek(offset);
+        String oldJson = fileRAF.readUTF();
+        String newJson = gson.toJson(bean);
+        FileUtil.insert(fileRAF,dir,"file_tmp",offset,fileRAF.getFilePointer(),newJson);
+        fileEndOffset = fileEndOffset - oldJson.getBytes().length + newJson.getBytes().length;
+        fileRAF.setLength(fileEndOffset);
+    }
 
+    private void setMaps(FileBean bean,long offset){
+        idOffsetMap.put(bean.getId(),offset);
+        idFileBeanMap.put(bean.getId(),bean);
+        pathFileBeanMap.put(bean.getPath(),bean);
     }
 }
