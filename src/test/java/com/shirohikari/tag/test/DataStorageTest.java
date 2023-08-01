@@ -38,4 +38,11 @@ public class DataStorageTest {
         l.add("t2");
         d.updateFileRecord(new FileBean(898,"E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\2.webp","更改后的数据2",l));
     }
+
+    @Test
+    public void removeFileRecord() throws IOException{
+        DataStorage d = DataStorage.create("E:\\test");
+        d.removeFileRecord(d.getFileBean(0));
+        d.removeFileRecord(d.getFileBean(2));
+    }
 }

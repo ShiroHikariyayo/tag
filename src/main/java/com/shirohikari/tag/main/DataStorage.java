@@ -62,14 +62,22 @@ public class DataStorage {
             String json = fileRAF.readUTF();
             FileBean bean = gson.fromJson(json,FileBean.class);
             nextId = bean.getId() + 1;
-            setMaps(bean,offset);
+            addToMaps(bean,offset);
         }
         System.gc();
         fileEndOffset = fileRAF.length();
     }
 
+    public boolean hasTag(int id){
+        return idFileBeanMap.containsKey(id);
+    }
+
     public boolean hasTag(String path){
         return pathFileBeanMap.containsKey(path);
+    }
+
+    public FileBean getFileBean(int id){
+        return idFileBeanMap.get(id);
     }
 
     public FileBean getFileBean(String path) throws IOException {
@@ -77,31 +85,45 @@ public class DataStorage {
     }
 
     public void addFileRecord(FileBean bean) throws IOException {
-        if(bean == null){
-            throw new IOException("不允许插入null数据");
-        } else if(bean.getId() != null){
-            throw new IOException("插入时不允许手动设置FileBean的id");
-        }
+        checkFileBean(bean,true);
         bean.setId(nextId++);
-        setMaps(bean,fileEndOffset);
+        addToMaps(bean,fileEndOffset);
         String json = gson.toJson(bean);
         fileEndOffset += json.getBytes().length + 2;
         fileRAF.writeUTF(json);
     }
 
     public void updateFileRecord(FileBean bean) throws IOException {
-        if(bean == null || bean.getId() == null){
-            throw new IOException("需要指定FileBean及其id");
-        }else if(!idFileBeanMap.containsKey(bean.getId())){
-            throw new IOException("未发现相应记录");
-        }
+        checkFileBean(bean,false);
         long offset = idOffsetMap.get(bean.getId());
-
         fileRAF.seek(offset);
         String oldJson = fileRAF.readUTF();
+        idFileBeanMap.replace(bean.getId(),bean);
+        pathFileBeanMap.replace(bean.getPath(),bean);
         String newJson = gson.toJson(bean);
-        //更新idOffsetMap
-        long len = newJson.getBytes().length - oldJson.getBytes().length;
+        updateOffset(oldJson,newJson,offset);
+        insertOrRemoveFileRecord(oldJson,newJson,offset);
+    }
+
+    public void removeFileRecord(FileBean bean) throws IOException {
+        checkFileBean(bean,false);
+        long offset = idOffsetMap.get(bean.getId());
+        fileRAF.seek(offset);
+        String oldJson = fileRAF.readUTF();
+        idOffsetMap.remove(bean.getId());
+        idFileBeanMap.remove(bean.getId());
+        pathFileBeanMap.remove(bean.getPath());
+        updateOffset(oldJson,null,offset);
+        insertOrRemoveFileRecord(oldJson,null,offset);
+    }
+
+    private void updateOffset(String oldJson,String newJson,long offset) throws IOException {
+        long len;
+        if(newJson != null){
+            len = newJson.getBytes().length - oldJson.getBytes().length;
+        }else {
+            len = -oldJson.getBytes().length - 2;
+        }
         Iterator iter = idOffsetMap.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
@@ -110,13 +132,48 @@ public class DataStorage {
             }
             entry.setValue((long)entry.getValue() + len);
         }
-
-        FileUtil.insert(fileRAF,dir,"file_tmp",offset,fileRAF.getFilePointer(),fileEndOffset,newJson);
-        fileEndOffset = fileEndOffset - oldJson.getBytes().length + newJson.getBytes().length;
-        fileRAF.setLength(fileEndOffset);
     }
 
-    private void setMaps(FileBean bean,long offset){
+    /**
+     * 更新或删除需要改变的FileBean记录
+     * @param oldJson 需要进行更改的记录
+     * @param newJson 新的记录，如果为null则删除记录
+     * @param offset 旧记录在file_table中的偏移量
+     * @throws IOException
+     */
+    private void insertOrRemoveFileRecord(String oldJson,String newJson,long offset) throws IOException {
+        File tmp=File.createTempFile("file_tmp", null,dir);
+        tmp.deleteOnExit();
+        FileUtil.saveAfterToTemp(fileRAF,fileRAF.getFilePointer(),tmp);
+        fileRAF.seek(offset);
+        if(newJson != null){
+            fileRAF.writeUTF(newJson);
+            fileEndOffset = fileEndOffset - oldJson.getBytes().length + newJson.getBytes().length;
+        }else {
+            fileEndOffset = fileEndOffset - oldJson.getBytes().length - 2;
+        }
+        FileUtil.readAndCover(fileRAF,fileRAF.getFilePointer(),tmp);
+        fileRAF.setLength(fileEndOffset);
+        tmp.delete();
+    }
+
+    private void checkFileBean(FileBean bean,boolean add) throws IOException {
+        if(add){
+            if(bean == null){
+                throw new IOException("不允许插入null数据");
+            } else if(bean.getId() != null){
+                throw new IOException("插入时不允许手动设置FileBean的id");
+            }
+        }else {
+            if(bean == null || bean.getId() == null){
+                throw new IOException("需要指定FileBean及其id");
+            }else if(!idFileBeanMap.containsKey(bean.getId())){
+                throw new IOException("未发现相应记录");
+            }
+        }
+    }
+
+    private void addToMaps(FileBean bean,long offset){
         idOffsetMap.put(bean.getId(),offset);
         idFileBeanMap.put(bean.getId(),bean);
         pathFileBeanMap.put(bean.getPath(),bean);
