@@ -2,6 +2,7 @@ package com.shirohikari.tag.test;
 
 import com.shirohikari.tag.main.DataStorage;
 import com.shirohikari.tag.main.bean.FileBean;
+import com.shirohikari.tag.main.bean.TagBean;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -44,5 +45,30 @@ public class DataStorageTest {
         DataStorage d = DataStorage.create("E:\\test");
         d.removeFileRecord(d.getFileBean(0));
         d.removeFileRecord(d.getFileBean(2));
+    }
+
+    @Test
+    public void addTagRecord() throws IOException {
+        DataStorage d = DataStorage.create("E:\\test");
+        for (int i = 1;i<=5;i++){
+            d.addTagRecord(new TagBean("tag"+i));
+        }
+    }
+
+    @Test
+    public void updateTagRecord() throws IOException {
+        DataStorage d = DataStorage.create("E:\\test");
+        ArrayList<Integer> l = new ArrayList<>();
+        l.add(1);
+        d.updateTagRecord(new TagBean("tag1",l));
+        l.add(3);
+        d.updateTagRecord(new TagBean("tag2",l));
+    }
+
+    @Test
+    public void removeTagRecord() throws IOException {
+        DataStorage d = DataStorage.create("E:\\test");
+        d.removeTagRecord(new TagBean("tag2"));
+        d.removeTagRecord(new TagBean("tag4"));
     }
 }

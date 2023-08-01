@@ -27,9 +27,9 @@ public class OtherTest {
         DataStorage d = DataStorage.create("E:\\test");
         for (int i = 1;i<=900;i++){
             ArrayList<String> l = new ArrayList<>();
-            if(i % 3 == 0) l.add("tag1");
-            if(i % 5 == 0) l.add("tag2");
-            if(i % 7 == 0) l.add("tag3");
+            l.add("tag1");
+            if(i % 2 == 0) l.add("tag2");
+            if(i % 3 == 0) l.add("tag3");
             d.addFileRecord(new FileBean("E:\\Pictures\\comic\\蘑菇的擬態日常\\第01话\\"+i+".webp","this is a bean"+i,l));
         }
         long s2 = System.currentTimeMillis();

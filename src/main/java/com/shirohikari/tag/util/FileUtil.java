@@ -16,7 +16,6 @@ public class FileUtil {
         for(String dir:paths){
             curPath.append(dir);
             File curFile = new File(curPath.toString());
-            //System.out.println(curFile.getPath());
             if (!curFile.exists()) {
                 curFile.mkdir();
             }

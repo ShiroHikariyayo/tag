@@ -6,6 +6,10 @@ public class TagBean {
     private String tag;
     private ArrayList<Integer> idList;
 
+    public TagBean(String tag) {
+        this(tag,new ArrayList<>());
+    }
+
     public TagBean(String tag, ArrayList<Integer> idList) {
         this.tag = tag;
         this.idList = idList;

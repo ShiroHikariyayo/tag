@@ -2,13 +2,11 @@ package com.shirohikari.tag.main;
 
 import com.google.gson.Gson;
 import com.shirohikari.tag.main.bean.FileBean;
+import com.shirohikari.tag.main.bean.TagBean;
 import com.shirohikari.tag.util.FileUtil;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author 20637
@@ -18,20 +16,23 @@ public class DataStorage {
     private static final String FILE_TABLE = "file_table";
 
     private int nextId;
+    private long tagEndOffset;
     private long fileEndOffset;
     private File dir;
-    private File tabTable;
+    private File tagTable;
     private File fileTable;
     private LinkedHashMap<Integer,Long> idOffsetMap;
     private HashMap<Integer,FileBean> idFileBeanMap;
     private HashMap<String,FileBean> pathFileBeanMap;
-    private RandomAccessFile tabRAF;
+    private HashMap<String, Long> tagOffsetMap;
+    private HashMap<String, TagBean> tagTagBeanMap;
+    private RandomAccessFile tagRAF;
     private RandomAccessFile fileRAF;
     private Gson gson;
 
-    private DataStorage(File dir,File tabTable,File fileTable) throws IOException {
+    private DataStorage(File dir,File tagTable,File fileTable) throws IOException {
         this.dir = dir;
-        this.tabTable = tabTable;
+        this.tagTable = tagTable;
         this.fileTable = fileTable;
         init();
     }
@@ -51,21 +52,33 @@ public class DataStorage {
 
     private void init() throws IOException {
         gson = new Gson();
-        tabRAF = new RandomAccessFile(tabTable,"rw");
+        tagRAF = new RandomAccessFile(tagTable,"rw");
         fileRAF = new RandomAccessFile(fileTable,"rw");
         idOffsetMap = new LinkedHashMap<>();
         idFileBeanMap = new HashMap<>();
         pathFileBeanMap = new HashMap<>();
+        tagOffsetMap = new HashMap<>();
+        tagTagBeanMap = new HashMap<>();
         //读取file_table信息
         while (fileRAF.getFilePointer() < fileRAF.length()){
             long offset = fileRAF.getFilePointer();
             String json = fileRAF.readUTF();
             FileBean bean = gson.fromJson(json,FileBean.class);
             nextId = bean.getId() + 1;
-            addToMaps(bean,offset);
+            addToFileMaps(bean,offset);
         }
         System.gc();
         fileEndOffset = fileRAF.length();
+        //读取tag_table信息
+        while (tagRAF.getFilePointer() < tagRAF.length()){
+            long offset = tagRAF.getFilePointer();
+            String json = tagRAF.readUTF();
+            TagBean bean = gson.fromJson(json, TagBean.class);
+            tagOffsetMap.put(bean.getTag(),offset);
+            tagTagBeanMap.put(bean.getTag(),bean);
+        }
+        System.gc();
+        tagEndOffset = tagRAF.length();
     }
 
     public boolean hasTag(int id){
@@ -87,7 +100,7 @@ public class DataStorage {
     public void addFileRecord(FileBean bean) throws IOException {
         checkFileBean(bean,true);
         bean.setId(nextId++);
-        addToMaps(bean,fileEndOffset);
+        addToFileMaps(bean,fileEndOffset);
         String json = gson.toJson(bean);
         fileEndOffset += json.getBytes().length + 2;
         fileRAF.writeUTF(json);
@@ -101,7 +114,7 @@ public class DataStorage {
         idFileBeanMap.replace(bean.getId(),bean);
         pathFileBeanMap.replace(bean.getPath(),bean);
         String newJson = gson.toJson(bean);
-        updateOffset(oldJson,newJson,offset);
+        updateOffset(oldJson,newJson,offset,true);
         insertOrRemoveFileRecord(oldJson,newJson,offset);
     }
 
@@ -113,18 +126,55 @@ public class DataStorage {
         idOffsetMap.remove(bean.getId());
         idFileBeanMap.remove(bean.getId());
         pathFileBeanMap.remove(bean.getPath());
-        updateOffset(oldJson,null,offset);
+        updateOffset(oldJson,null,offset,true);
         insertOrRemoveFileRecord(oldJson,null,offset);
     }
 
-    private void updateOffset(String oldJson,String newJson,long offset) throws IOException {
+    public void addTagRecord(TagBean bean) throws IOException {
+        checkTagBean(bean,true);
+        tagOffsetMap.put(bean.getTag(),tagEndOffset);
+        tagTagBeanMap.put(bean.getTag(),bean);
+        String json = gson.toJson(bean);
+        tagEndOffset += json.getBytes().length + 2;
+        tagRAF.writeUTF(json);
+    }
+
+    public void updateTagRecord(TagBean bean) throws IOException {
+        checkTagBean(bean,false);
+        long offset = tagOffsetMap.get(bean.getTag());
+        tagRAF.seek(offset);
+        String oldJson = tagRAF.readUTF();
+        tagTagBeanMap.replace(bean.getTag(),bean);
+        String newJson = gson.toJson(bean);
+        updateOffset(oldJson,newJson,offset,false);
+        insertOrRemoveTagRecord(oldJson,newJson,offset);
+    }
+
+    public void removeTagRecord(TagBean bean) throws IOException {
+        checkTagBean(bean,false);
+        checkTagBean(bean,false);
+        long offset = tagOffsetMap.get(bean.getTag());
+        tagRAF.seek(offset);
+        String oldJson = tagRAF.readUTF();
+        tagOffsetMap.remove(bean.getTag());
+        tagTagBeanMap.remove(bean.getTag());
+        updateOffset(oldJson,null,offset,false);
+        insertOrRemoveTagRecord(oldJson,null,offset);
+    }
+
+    private void updateOffset(String oldJson,String newJson,long offset,boolean file) throws IOException {
         long len;
         if(newJson != null){
             len = newJson.getBytes().length - oldJson.getBytes().length;
         }else {
             len = -oldJson.getBytes().length - 2;
         }
-        Iterator iter = idOffsetMap.entrySet().iterator();
+        Iterator iter;
+        if(file){
+            iter = idOffsetMap.entrySet().iterator();
+        }else{
+            iter = tagOffsetMap.entrySet().iterator();
+        }
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
             if((long)entry.getValue() <= offset){
@@ -157,15 +207,35 @@ public class DataStorage {
         tmp.delete();
     }
 
+    private void insertOrRemoveTagRecord(String oldJson,String newJson,long offset) throws IOException {
+        File tmp=File.createTempFile("tag_tmp", null,dir);
+        tmp.deleteOnExit();
+        FileUtil.saveAfterToTemp(tagRAF,tagRAF.getFilePointer(),tmp);
+        tagRAF.seek(offset);
+        if(newJson != null){
+            tagRAF.writeUTF(newJson);
+            tagEndOffset = tagEndOffset - oldJson.getBytes().length + newJson.getBytes().length;
+        }else {
+            tagEndOffset = tagEndOffset - oldJson.getBytes().length - 2;
+        }
+        FileUtil.readAndCover(tagRAF,tagRAF.getFilePointer(),tmp);
+        tagRAF.setLength(tagEndOffset);
+        tmp.delete();
+    }
+
     private void checkFileBean(FileBean bean,boolean add) throws IOException {
+        if(bean == null){
+            throw new IOException("FileBean为null");
+        }
+        if(bean.getTagList() == null || bean.getTagList().isEmpty()){
+            throw new IOException("FileBean为必须至少含有一个tag");
+        }
         if(add){
-            if(bean == null){
-                throw new IOException("不允许插入null数据");
-            } else if(bean.getId() != null){
+            if(bean.getId() != null){
                 throw new IOException("插入时不允许手动设置FileBean的id");
             }
         }else {
-            if(bean == null || bean.getId() == null){
+            if(bean.getId() == null){
                 throw new IOException("需要指定FileBean及其id");
             }else if(!idFileBeanMap.containsKey(bean.getId())){
                 throw new IOException("未发现相应记录");
@@ -173,7 +243,25 @@ public class DataStorage {
         }
     }
 
-    private void addToMaps(FileBean bean,long offset){
+    private void checkTagBean(TagBean bean,boolean add) throws IOException {
+        if(bean == null){
+            throw new IOException("TagBean为null");
+        }
+        if(add){
+            if(tagTagBeanMap.containsKey(bean.getTag())){
+                throw new IOException("不可添加已有的tag");
+            }
+            if(!bean.getIdList().isEmpty()){
+                throw new IOException("创建新标签时不可手动指定idList");
+            }
+        }else{
+            if(!tagTagBeanMap.containsKey(bean.getTag())){
+                throw new IOException("未发现指定tag");
+            }
+        }
+    }
+
+    private void addToFileMaps(FileBean bean,long offset){
         idOffsetMap.put(bean.getId(),offset);
         idFileBeanMap.put(bean.getId(),bean);
         pathFileBeanMap.put(bean.getPath(),bean);
