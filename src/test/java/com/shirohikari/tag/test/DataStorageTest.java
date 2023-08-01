@@ -33,8 +33,8 @@ public class DataStorageTest {
     public void updateFileRecord() throws IOException{
         DataStorage d = DataStorage.create("E:\\test");
         ArrayList<String> l = new ArrayList<>();
-//        l.add("t1");
-//        d.updateFileRecord(new FileBean(896,"E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\1.webp","更改后的数据1",l));
+        l.add("t1");
+        d.updateFileRecord(new FileBean(896,"E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\1.webp","更改后的数据1",l));
         l.add("t2");
         d.updateFileRecord(new FileBean(898,"E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\2.webp","更改后的数据2",l));
     }

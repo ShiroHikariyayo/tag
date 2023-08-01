@@ -39,14 +39,21 @@ public class FileUtil {
         }
     }
 
-    public static void insert(RandomAccessFile raf,File dir, String tempFile,long overrideOffset,long saveOffset,String insertContent) throws IOException{
+    public static void insert(RandomAccessFile raf,File dir, String tempFile,long overrideOffset,long saveOffset,Long fileEndOffset,String insertContent) throws IOException{
         File tmp=File.createTempFile(tempFile, null,dir);
         tmp.deleteOnExit();
         //使用临时文件保存插入点后的数据
         BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(tmp));
         BufferedInputStream in = new BufferedInputStream(new FileInputStream(tmp));
-        raf.seek(saveOffset);
+        //计算新文件长度
+        if (fileEndOffset == null){
+            fileEndOffset = raf.length();
+        }
+        raf.seek(overrideOffset);
+        String oldJson = raf.readUTF();
+        fileEndOffset = fileEndOffset - oldJson.getBytes().length + insertContent.getBytes().length;
         //----------下面代码将插入点后的内容读入临时文件中保存----------
+        raf.seek(saveOffset);
         byte[] buffer=new byte[128];
         //用于保存实际读取的字节数
         int hasRead =0;
@@ -65,9 +72,11 @@ public class FileUtil {
         while((hasRead=in.read(buffer))>0){
             raf.write(buffer,0, hasRead);
         }
+
         out.close();
         in.close();
         tmp.delete();
+        raf.setLength(fileEndOffset);
     }
 
 }

@@ -6,6 +6,9 @@ import com.shirohikari.tag.util.FileUtil;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * @author 20637
@@ -19,7 +22,7 @@ public class DataStorage {
     private File dir;
     private File tabTable;
     private File fileTable;
-    private HashMap<Integer,Long> idOffsetMap;
+    private LinkedHashMap<Integer,Long> idOffsetMap;
     private HashMap<Integer,FileBean> idFileBeanMap;
     private HashMap<String,FileBean> pathFileBeanMap;
     private RandomAccessFile tabRAF;
@@ -50,7 +53,7 @@ public class DataStorage {
         gson = new Gson();
         tabRAF = new RandomAccessFile(tabTable,"rw");
         fileRAF = new RandomAccessFile(fileTable,"rw");
-        idOffsetMap = new HashMap<>();
+        idOffsetMap = new LinkedHashMap<>();
         idFileBeanMap = new HashMap<>();
         pathFileBeanMap = new HashMap<>();
         //读取file_table信息
@@ -93,10 +96,22 @@ public class DataStorage {
             throw new IOException("未发现相应记录");
         }
         long offset = idOffsetMap.get(bean.getId());
+
         fileRAF.seek(offset);
         String oldJson = fileRAF.readUTF();
         String newJson = gson.toJson(bean);
-        FileUtil.insert(fileRAF,dir,"file_tmp",offset,fileRAF.getFilePointer(),newJson);
+        //更新idOffsetMap
+        long len = newJson.getBytes().length - oldJson.getBytes().length;
+        Iterator iter = idOffsetMap.entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            if((long)entry.getValue() <= offset){
+                continue;
+            }
+            entry.setValue((long)entry.getValue() + len);
+        }
+
+        FileUtil.insert(fileRAF,dir,"file_tmp",offset,fileRAF.getFilePointer(),fileEndOffset,newJson);
         fileEndOffset = fileEndOffset - oldJson.getBytes().length + newJson.getBytes().length;
         fileRAF.setLength(fileEndOffset);
     }
