@@ -9,7 +9,8 @@ import java.io.*;
 import java.util.*;
 
 /**
- * @author 20637
+ * 对tag_table和file_table文件进行直接操作
+ * @author ShiroHikari
  */
 public class DataStorage {
     private static final String TAG_TABLE = "tag_table";
@@ -21,6 +22,7 @@ public class DataStorage {
     private File dir;
     private File tagTable;
     private File fileTable;
+    private HashSet<String> tags;
     private LinkedHashMap<Integer,Long> idOffsetMap;
     private HashMap<Integer,FileBean> idFileBeanMap;
     private HashMap<String,FileBean> pathFileBeanMap;
@@ -54,6 +56,7 @@ public class DataStorage {
         gson = new Gson();
         tagRAF = new RandomAccessFile(tagTable,"rw");
         fileRAF = new RandomAccessFile(fileTable,"rw");
+        tags = new HashSet<>();
         idOffsetMap = new LinkedHashMap<>();
         idFileBeanMap = new HashMap<>();
         pathFileBeanMap = new HashMap<>();
@@ -74,6 +77,7 @@ public class DataStorage {
             long offset = tagRAF.getFilePointer();
             String json = tagRAF.readUTF();
             TagBean bean = gson.fromJson(json, TagBean.class);
+            tags.add(bean.getTag());
             tagOffsetMap.put(bean.getTag(),offset);
             tagTagBeanMap.put(bean.getTag(),bean);
         }
@@ -81,12 +85,20 @@ public class DataStorage {
         tagEndOffset = tagRAF.length();
     }
 
-    public boolean hasTag(int id){
+    public boolean hasFile(int id){
         return idFileBeanMap.containsKey(id);
     }
 
-    public boolean hasTag(String path){
+    public boolean hasFile(String path){
         return pathFileBeanMap.containsKey(path);
+    }
+
+    public boolean hasTag(String tag){
+        return tags.contains(tag);
+    }
+
+    public Set<String> getAllTags(){
+        return Collections.unmodifiableSet(tags);
     }
 
     public FileBean getFileBean(int id){
@@ -132,6 +144,7 @@ public class DataStorage {
 
     public void addTagRecord(TagBean bean) throws IOException {
         checkTagBean(bean,true);
+        tags.add(bean.getTag());
         tagOffsetMap.put(bean.getTag(),tagEndOffset);
         tagTagBeanMap.put(bean.getTag(),bean);
         String json = gson.toJson(bean);
@@ -152,10 +165,10 @@ public class DataStorage {
 
     public void removeTagRecord(TagBean bean) throws IOException {
         checkTagBean(bean,false);
-        checkTagBean(bean,false);
         long offset = tagOffsetMap.get(bean.getTag());
         tagRAF.seek(offset);
         String oldJson = tagRAF.readUTF();
+        tags.remove(bean.getTag());
         tagOffsetMap.remove(bean.getTag());
         tagTagBeanMap.remove(bean.getTag());
         updateOffset(oldJson,null,offset,false);
