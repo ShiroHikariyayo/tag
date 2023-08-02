@@ -18,8 +18,9 @@ public class TagFileTest {
         t.addTagToFile(new FileBean("E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\1.webp","数据1",l),new TagBean("t4"));
         l.remove("t2");
         t.addTagToFile(new FileBean("E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\1.webp","数据1",l),new TagBean("t4"));
+        t.addTagToFile(new FileBean("E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\1.webp","数据1",l),new TagBean("t5"));
         t.addTagToFile("E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\2.webp","tag1");
-        t.addTagToFile("E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\2.webp","tag1");
+        t.addTagToFile("E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\2.webp","tag2");
     }
 
     @Test
@@ -32,5 +33,18 @@ public class TagFileTest {
         fileBean.getTagSet().add("tag3");
         t.updateFile(fileBean);
         t.updateFile(fileBean);
+    }
+
+    @Test
+    public void deleteTagToFile() throws IOException {
+        TagFile t = new TagFile("E:\\test");
+        t.addTagToFile("E:\\test\\1","tag1");
+        t.addTagToFile("E:\\test\\1","tag2");
+        t.addTagToFile("E:\\test\\2","tag2");
+        t.deleteTagToFile("E:\\test\\1","tag1");
+        t.deleteTagToFile("E:\\test\\1","tag1");
+        t.deleteTagToFile("E:\\test\\3","tag1");
+        t.deleteTagToFile("E:\\test\\1","tag3");
+        t.deleteTagToFile("E:\\test\\1","tag2");
     }
 }

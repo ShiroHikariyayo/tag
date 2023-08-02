@@ -244,10 +244,10 @@ public class DataStorage {
         if(bean == null){
             throw new IOException("FileBean为null");
         }
-        if(bean.getTagSet() == null || bean.getTagSet().isEmpty()){
-            throw new IOException("FileBean为必须至少含有一个tag");
-        }
         if(add){
+            if(bean.getTagSet() == null || bean.getTagSet().isEmpty()){
+                throw new IOException("FileBean为必须至少含有一个tag");
+            }
             if(bean.getId() != null){
                 throw new IOException("插入时不允许手动设置FileBean的id");
             }

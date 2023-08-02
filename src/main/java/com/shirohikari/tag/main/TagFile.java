@@ -48,7 +48,9 @@ public class TagFile {
     }
 
     public void addTagToFile(String filePath,String tag){
-        addTagToFile(new FileBean(filePath,"",new HashSet<>()),new TagBean(tag));
+        FileBean bean = dataStorage.getFileBean(filePath);
+        bean = bean == null ? new FileBean(filePath,"",new HashSet<>()) : bean;
+        addTagToFile(bean,new TagBean(tag));
     }
 
     public void addTagToFile(FileBean fileBean,String tag){
@@ -82,20 +84,52 @@ public class TagFile {
             tagBean.getIdSet().add(fileBean.getId());
             dataStorage.updateTagRecord(tagBean);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
     public void updateFile(FileBean fileBean){
-        if(fileBean.getId() == null || dataStorage.getFileBean(fileBean.getId()) == null){
+        if(fileBean == null || fileBean.getId() == null || dataStorage.getFileBean(fileBean.getId()) == null){
             throw new RuntimeException("传入的bean必须为已在表内的bean");
+        }
+        if(removeFileWhenNoTag(fileBean,0)){
+            return;
         }
         try {
             dataStorage.updateFileRecord(fileBean);
             updateIdInExistTag(fileBean.getTagSet(),fileBean.getId());
             addIdInNotExistTag(fileBean);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteTagToFile(String path,String tag){
+        deleteTagToFile(dataStorage.getFileBean(path),dataStorage.getTagBean(tag));
+    }
+
+    public void deleteTagToFile(FileBean fileBean,TagBean tagBean){
+        if(fileBean == null || !dataStorage.hasFile(fileBean.getPath())){
+            return;
+        }
+        if(removeFileWhenNoTag(fileBean,1)){
+            return;
+        }
+        if(tagBean == null || !dataStorage.getAllTags().contains(tagBean.getTag())){
+            return;
+        }
+        if(!fileBean.getTagSet().contains(tagBean.getTag())){
+            return;
+        }
+        fileBean = dataStorage.getFileBean(fileBean.getPath());
+        tagBean = dataStorage.getTagBean(tagBean.getTag());
+        fileBean.getTagSet().remove(tagBean.getTag());
+        tagBean.getIdSet().remove(fileBean.getId());
+        try {
+            dataStorage.updateFileRecord(fileBean);
+            dataStorage.updateTagRecord(tagBean);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -129,6 +163,26 @@ public class TagFile {
             dataStorage.addTagRecord(tagBean);
             tagBean.getIdSet().add(fileBean.getId());
             dataStorage.updateTagRecord(tagBean);
+        }
+    }
+
+    private boolean removeFileWhenNoTag(FileBean bean,int size){
+        FileBean cacheBean = dataStorage.getFileBean(bean.getPath());
+        if(cacheBean != null && bean.getTagSet().size() == size){
+            try {
+                for (String tag:dataStorage.getAllTags()){
+                    TagBean tagBean = dataStorage.getTagBean(tag);
+                    if(tagBean.getIdSet().remove(cacheBean.getId())){
+                        dataStorage.updateTagRecord(tagBean);
+                    }
+                }
+                dataStorage.removeFileRecord(cacheBean);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }else {
+            return false;
         }
     }
 }
