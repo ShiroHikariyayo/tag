@@ -1,6 +1,7 @@
 package com.shirohikari.tag.test;
 
 import com.shirohikari.tag.main.DataStorage;
+import com.shirohikari.tag.main.TagFile;
 import com.shirohikari.tag.main.bean.FileBean;
 import org.junit.Test;
 import org.openjdk.jol.info.ClassLayout;
@@ -15,22 +16,25 @@ public class OtherTest {
 
     @Test
     public void getInitMemoryUsed() throws IOException {
-        DataStorage d = DataStorage.create("E:\\test");
+        TagFile t = new TagFile("E:\\test");
         MemoryMXBean bean = ManagementFactory.getMemoryMXBean();
         MemoryUsage memoryUsage = bean.getHeapMemoryUsage();
         System.out.println(memoryUsage.getUsed());
     }
 
     @Test
-    public void genFileRecord() throws IOException {
+    public void genTable() throws IOException {
         long s1 = System.currentTimeMillis();
-        DataStorage d = DataStorage.create("E:\\test");
-        for (int i = 1;i<=900;i++){
-            HashSet<String> l = new HashSet<>();
-            l.add("tag1");
-            if(i % 2 == 0) l.add("tag2");
-            if(i % 3 == 0) l.add("tag3");
-            d.addFileRecord(new FileBean("E:\\Pictures\\comic\\蘑菇的擬態日常\\第01话\\"+i+".webp","this is a bean"+i,l));
+        TagFile t = new TagFile("E:\\test");
+        for(int j = 1;j<=10;j++){
+            for (int i = 1;i<=1000;i++){
+                HashSet<String> l = new HashSet<>();
+                if(i % 3 == 0) l.add("tag2");
+                if(i % 7 == 0) l.add("tag3");
+                if(i % 11 == 0) l.add("tag4");
+                t.addTagToFile(new FileBean("E:\\Pictures\\comic\\蘑菇的擬態日常\\第0"+j+"话\\"+i+".webp","this is a bean"+j+":"+i,l),"tag1");
+            }
+            System.gc();
         }
         long s2 = System.currentTimeMillis();
         System.out.println("time consume:"+(s2-s1));

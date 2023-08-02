@@ -133,6 +133,46 @@ public class TagFile {
         }
     }
 
+    public HashSet<Integer> getFileBeansId(String tag){
+        return dataStorage.getTagBean(tag).getIdSet();
+    }
+
+    public HashSet<Integer> getFileBeansId(ArrayList<String> tags){
+        TagBean tagBean;
+        HashSet<Integer> intersection = null;
+        for(String tag:tags){
+            if((tagBean = dataStorage.getTagBean(tag)) != null){
+                if(intersection == null){
+                    intersection = new HashSet<>();
+                    intersection.addAll(tagBean.getIdSet());
+                }else {
+                    intersection.retainAll(tagBean.getIdSet());
+                }
+            }
+        }
+        return intersection;
+    }
+
+    public ArrayList<FileBean> getFileBeans(ArrayList<String> tags){
+        ArrayList<FileBean> beans = new ArrayList<>();
+        HashSet<Integer> set = this.getFileBeansId(tags);
+        for(int id:set){
+            beans.add(dataStorage.getFileBean(id));
+        }
+        return beans;
+    }
+
+    public ArrayList<FileBean> getFileBeans(String tag){
+        ArrayList<FileBean> beans = new ArrayList<>();
+        TagBean tagBean;
+        if((tagBean = dataStorage.getTagBean(tag)) != null){
+            for(int id:tagBean.getIdSet()){
+                beans.add(dataStorage.getFileBean(id));
+            }
+        }
+        return beans;
+    }
+
     private void updateIdInExistTag(HashSet<String> tagSet,Integer id) throws IOException {
         for(String tag:dataStorage.getAllTags()){
             TagBean tagBean = dataStorage.getTagBean(tag);
