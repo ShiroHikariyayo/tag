@@ -105,8 +105,12 @@ public class DataStorage {
         return idFileBeanMap.get(id);
     }
 
-    public FileBean getFileBean(String path) throws IOException {
+    public FileBean getFileBean(String path) {
         return pathFileBeanMap.get(path);
+    }
+
+    public TagBean getTagBean(String tag){
+        return tagTagBeanMap.get(tag);
     }
 
     public void addFileRecord(FileBean bean) throws IOException {
