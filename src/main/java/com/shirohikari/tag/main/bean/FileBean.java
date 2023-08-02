@@ -1,22 +1,22 @@
 package com.shirohikari.tag.main.bean;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 
 public class FileBean {
     private Integer id;
     private String path;
     private String description;
-    private ArrayList<String> tagList;
+    private HashSet<String> tagSet;
 
-    public FileBean(String path, String description, ArrayList<String> tagList) {
-        this(null,path,description,tagList);
+    public FileBean(String path, String description, HashSet<String> tagSet) {
+        this(null,path,description,tagSet);
     }
 
-    public FileBean(Integer id, String path, String description, ArrayList<String> tagList) {
+    public FileBean(Integer id, String path, String description, HashSet<String> tagSet) {
         this.id = id;
         this.path = path;
         this.description = description;
-        this.tagList = tagList;
+        this.tagSet = tagSet;
     }
 
     public Integer getId() {
@@ -43,12 +43,12 @@ public class FileBean {
         this.description = description;
     }
 
-    public ArrayList<String> getTagList() {
-        return tagList;
+    public HashSet<String> getTagSet() {
+        return tagSet;
     }
 
-    public void setTagList(ArrayList<String> tagList) {
-        this.tagList = tagList;
+    public void setTagSet(HashSet<String> tagSet) {
+        this.tagSet = tagSet;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class FileBean {
                 "id=" + id +
                 ", path='" + path + '\'' +
                 ", description='" + description + '\'' +
-                ", tagList=" + tagList +
+                ", tagSet=" + tagSet +
                 '}';
     }
 }

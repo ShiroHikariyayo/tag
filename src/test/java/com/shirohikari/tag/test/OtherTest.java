@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
-import java.util.ArrayList;
+import java.util.HashSet;
 
 public class OtherTest {
 
@@ -26,7 +26,7 @@ public class OtherTest {
         long s1 = System.currentTimeMillis();
         DataStorage d = DataStorage.create("E:\\test");
         for (int i = 1;i<=900;i++){
-            ArrayList<String> l = new ArrayList<>();
+            HashSet<String> l = new HashSet<>();
             l.add("tag1");
             if(i % 2 == 0) l.add("tag2");
             if(i % 3 == 0) l.add("tag3");
@@ -38,7 +38,7 @@ public class OtherTest {
 
     @Test
     public void fileBeanSize(){
-        ArrayList<String> l = new ArrayList<>();
+        HashSet<String> l = new HashSet<>();
         l.add("tag1");
         l.add("tag2");
         l.add("tag3");

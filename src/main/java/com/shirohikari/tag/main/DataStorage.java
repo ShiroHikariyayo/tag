@@ -244,7 +244,7 @@ public class DataStorage {
         if(bean == null){
             throw new IOException("FileBean为null");
         }
-        if(bean.getTagList() == null || bean.getTagList().isEmpty()){
+        if(bean.getTagSet() == null || bean.getTagSet().isEmpty()){
             throw new IOException("FileBean为必须至少含有一个tag");
         }
         if(add){
@@ -268,7 +268,7 @@ public class DataStorage {
             if(tagTagBeanMap.containsKey(bean.getTag())){
                 throw new IOException("不可添加已有的tag");
             }
-            if(!bean.getIdList().isEmpty()){
+            if(!bean.getIdSet().isEmpty()){
                 throw new IOException("创建新标签时不可手动指定idList");
             }
         }else{

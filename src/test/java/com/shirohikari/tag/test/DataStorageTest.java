@@ -6,7 +6,7 @@ import com.shirohikari.tag.main.bean.TagBean;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashSet;
 
 public class DataStorageTest {
 
@@ -18,7 +18,7 @@ public class DataStorageTest {
     @Test
     public void addFileRecord() throws IOException {
         DataStorage d = DataStorage.create("E:\\test");
-        ArrayList<String> l = new ArrayList<>();
+        HashSet<String> l = new HashSet<>();
         l.add("t1");
         l.add("t2");
         d.addFileRecord(new FileBean("E:\\test\\1","bean1",l));
@@ -33,7 +33,7 @@ public class DataStorageTest {
     @Test
     public void updateFileRecord() throws IOException{
         DataStorage d = DataStorage.create("E:\\test");
-        ArrayList<String> l = new ArrayList<>();
+        HashSet<String> l = new HashSet<>();
         l.add("t1");
         d.updateFileRecord(new FileBean(896,"E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\1.webp","更改后的数据1",l));
         l.add("t2");
@@ -58,7 +58,7 @@ public class DataStorageTest {
     @Test
     public void updateTagRecord() throws IOException {
         DataStorage d = DataStorage.create("E:\\test");
-        ArrayList<Integer> l = new ArrayList<>();
+        HashSet<Integer> l = new HashSet<>();
         l.add(1);
         d.updateTagRecord(new TagBean("tag1",l));
         l.add(3);

@@ -1,18 +1,18 @@
 package com.shirohikari.tag.main.bean;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 
 public class TagBean {
     private String tag;
-    private ArrayList<Integer> idList;
+    private HashSet<Integer> idSet;
 
     public TagBean(String tag) {
-        this(tag,new ArrayList<>());
+        this(tag,new HashSet<>());
     }
 
-    public TagBean(String tag, ArrayList<Integer> idList) {
+    public TagBean(String tag, HashSet<Integer> idSet) {
         this.tag = tag;
-        this.idList = idList;
+        this.idSet = idSet;
     }
 
     public String getTag() {
@@ -23,19 +23,19 @@ public class TagBean {
         this.tag = tag;
     }
 
-    public ArrayList<Integer> getIdList() {
-        return idList;
+    public HashSet<Integer> getIdSet() {
+        return idSet;
     }
 
-    public void setIdList(ArrayList<Integer> idList) {
-        this.idList = idList;
+    public void setIdSet(HashSet<Integer> idSet) {
+        this.idSet = idSet;
     }
 
     @Override
     public String toString() {
         return "TagBean{" +
                 "tag='" + tag + '\'' +
-                ", idList=" + idList +
+                ", idSet=" + idSet +
                 '}';
     }
 }

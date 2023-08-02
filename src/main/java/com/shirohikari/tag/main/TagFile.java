@@ -5,7 +5,6 @@ import com.shirohikari.tag.main.bean.TagBean;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,7 +44,7 @@ public class TagFile {
     }
 
     public void addTagToFile(String filePath,String tag){
-        addTagToFile(new FileBean(filePath,"",new ArrayList<>()),new TagBean(tag));
+        addTagToFile(new FileBean(filePath,"",new HashSet<>()),new TagBean(tag));
     }
 
     public void addTagToFile(FileBean fileBean,String tag){
@@ -54,11 +53,11 @@ public class TagFile {
 
     public void addTagToFile(FileBean fileBean,TagBean tagBean){
         try {
-            if(tagBean.getIdList().size() != 0){
+            if(tagBean.getIdSet().size() != 0){
                 throw new RuntimeException("添加标签时不可手动设置idList");
             }
-            if(!fileBean.getTagList().contains(tagBean.getTag())){
-                fileBean.getTagList().add(tagBean.getTag());
+            if(!fileBean.getTagSet().contains(tagBean.getTag())){
+                fileBean.getTagSet().add(tagBean.getTag());
             }
             if (dataStorage.hasFile(fileBean.getPath())){
                 fileBean.setId(dataStorage.getFileBean(fileBean.getPath()).getId());
@@ -71,7 +70,7 @@ public class TagFile {
                 dataStorage.addTagRecord(tagBean);
             }
             fileBean.setId(fileBean.getId());
-            tagBean.getIdList().add(fileBean.getId());
+            tagBean.getIdSet().add(fileBean.getId());
             dataStorage.updateTagRecord(tagBean);
         } catch (IOException e) {
             e.printStackTrace();
@@ -84,10 +83,10 @@ public class TagFile {
         }
         try {
             dataStorage.updateFileRecord(fileBean);
-            updateIdInExistTag(fileBean.getTagList(),fileBean.getId());
+            updateIdInExistTag(fileBean.getTagSet(),fileBean.getId());
             Set<String> allTags = dataStorage.getAllTags();
             ArrayList<String> extractTags = new ArrayList<>();
-            for(String tag:fileBean.getTagList()){
+            for(String tag:fileBean.getTagSet()){
                 if(!allTags.contains(tag)){
                     extractTags.add(tag);
                 }
@@ -96,7 +95,7 @@ public class TagFile {
             for(String tag:extractTags){
                 tagBean = new TagBean(tag);
                 dataStorage.addTagRecord(tagBean);
-                tagBean.getIdList().add(fileBean.getId());
+                tagBean.getIdSet().add(fileBean.getId());
                 dataStorage.updateTagRecord(tagBean);
             }
         } catch (IOException e) {
@@ -104,14 +103,14 @@ public class TagFile {
         }
     }
 
-    private void updateIdInExistTag(ArrayList<String> tagList,Integer id) throws IOException {
+    private void updateIdInExistTag(HashSet<String> tagSet,Integer id) throws IOException {
         for(String tag:dataStorage.getAllTags()){
             TagBean tagBean = dataStorage.getTagBean(tag);
-            if(tagList.contains(tag) && !tagBean.getIdList().contains(id)){//在tagList中找到的tag，说明要在这些tag的idList中增加id
-                tagBean.getIdList().add(id);
+            if(tagSet.contains(tag) && !tagBean.getIdSet().contains(id)){//在tagList中找到的tag，说明要在这些tag的idList中增加id
+                tagBean.getIdSet().add(id);
                 dataStorage.updateTagRecord(tagBean);
             }else if(tagBean != null){//未在tagList中找到这些tag，说明要在这些tag的idList中删除id或者表中不存在这些tag
-                tagBean.getIdList().remove(id);
+                tagBean.getIdSet().remove(id);
                 dataStorage.updateTagRecord(tagBean);
             }
         }
