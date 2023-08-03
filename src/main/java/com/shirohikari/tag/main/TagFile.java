@@ -4,9 +4,8 @@ import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.main.bean.TagBean;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 将标签和文件做关联,并不会对文件进行修改
@@ -45,6 +44,36 @@ public class TagFile {
 
     public TagBean getTagBean(String tag){
         return dataStorage.getTagBean(tag);
+    }
+
+    public void createTag(String tag){
+        try {
+            dataStorage.addTagRecord(new TagBean(tag));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void removeTag(List<String> tags){
+        for(String tag:tags){
+            removeTag(tag);
+        }
+    }
+
+    public void removeTag(String tag){
+        TagBean tagBean = dataStorage.getTagBean(tag);
+        if(tagBean != null){
+            List<FileBean> beans = getFileBeans(tag).stream().sorted(((o1, o2) -> o2.getId() - o1.getId())).collect(Collectors.toList());
+            try {
+                for(FileBean bean:beans) {
+                    bean.getTagSet().remove(tag);
+                    dataStorage.updateFileRecord(bean);
+                }
+                dataStorage.removeTagRecord(tagBean);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     /**
@@ -108,7 +137,7 @@ public class TagFile {
      * @param path
      * @param tags
      */
-    public void addTagsToFile(String path,ArrayList<String> tags){
+    public void addTagsToFile(String path,List<String> tags){
         FileBean bean = dataStorage.getFileBean(path);
         bean = bean == null ? new FileBean(path,"") : bean;
         ArrayList<TagBean> tagBeans = new ArrayList<>();
@@ -123,7 +152,7 @@ public class TagFile {
      * @param fileBean
      * @param tagBeans
      */
-    public void addTagsToFile(FileBean fileBean,ArrayList<TagBean> tagBeans){
+    public void addTagsToFile(FileBean fileBean,List<TagBean> tagBeans){
         for(TagBean tagBean:tagBeans){
             fileBean.getTagSet().add(tagBean.getTag());
         }
@@ -225,7 +254,7 @@ public class TagFile {
      * @param tag
      * @return
      */
-    public HashSet<Integer> getFileBeansId(String tag){
+    public Set<Integer> getFileBeansId(String tag){
         return dataStorage.getTagBean(tag).getIdSet();
     }
 
@@ -234,7 +263,7 @@ public class TagFile {
      * @param tags
      * @return
      */
-    public HashSet<Integer> getFileBeansId(ArrayList<String> tags){
+    public Set<Integer> getFileBeansId(List<String> tags){
         TagBean tagBean;
         HashSet<Integer> intersection = null;
         for(String tag:tags){
@@ -255,9 +284,9 @@ public class TagFile {
      * @param tags
      * @return
      */
-    public ArrayList<FileBean> getFileBeans(ArrayList<String> tags){
+    public List<FileBean> getFileBeans(List<String> tags){
         ArrayList<FileBean> beans = new ArrayList<>();
-        HashSet<Integer> set = this.getFileBeansId(tags);
+        Set<Integer> set = this.getFileBeansId(tags);
         for(int id:set){
             beans.add(dataStorage.getFileBean(id));
         }

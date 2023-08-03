@@ -8,6 +8,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class TagFileTest {
     @Test
@@ -102,12 +104,25 @@ public class TagFileTest {
         l.add("标签1");
         l.add("标签2");
         l.add("标签3");
-        HashSet<Integer> set = t.getFileBeansId(l);
+        Set<Integer> set = t.getFileBeansId(l);
         System.out.println(set);
         System.out.println("===================");
-        ArrayList<FileBean> arr = t.getFileBeans(l);
+        List<FileBean> arr = t.getFileBeans(l);
         System.out.println(arr);
         long s2 = System.currentTimeMillis();
         System.out.println("耗时:"+(s2 - s1));
+    }
+
+    @Test
+    public void removeTag() throws IOException {
+        TagFile t = new TagFile("E:\\test");
+        HashSet<String> set = new HashSet<>();
+        set.add("t1");
+        t.addTagToFile(new FileBean("E:\\test\\1","desc1",set));
+        set.add("t2");
+        t.addTagToFile(new FileBean("E:\\test\\2","desc2",set));
+        set.add("t3");
+        t.addTagToFile(new FileBean("E:\\test\\3","desc3",set));
+        t.removeTag("t1");
     }
 }
