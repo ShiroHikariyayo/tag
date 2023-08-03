@@ -26,15 +26,39 @@ public class OtherTest {
     public void genTable() throws IOException {
         long s1 = System.currentTimeMillis();
         TagFile t = new TagFile("E:\\test");
-        for(int j = 1;j<=10;j++){
-            for (int i = 1;i<=1000;i++){
+        String[] tags = new String[100];
+        for(int i=0;i<100;i++){
+            tags[i] = "标签"+i;
+        }
+        for(int j = 1;j<=900;j++){
+            for (int i = 1;i<=100;i++){
                 HashSet<String> l = new HashSet<>();
-                if(i % 3 == 0) l.add("tag2");
-                if(i % 7 == 0) l.add("tag3");
-                if(i % 11 == 0) l.add("tag4");
-                t.addTagToFile(new FileBean("E:\\Pictures\\comic\\蘑菇的擬態日常\\第0"+j+"话\\"+i+".webp","this is a bean"+j+":"+i,l),"tag1");
+                if(i % 13 == 0) l.add("tag1");
+                if(i % 14 == 0) l.add("tag2");
+                if(i % 15 == 0) l.add("tag3");
+                if(i % 16 == 0) l.add("tag4");
+                l.add(tags[OtherTest.getRandom()]);
+                l.add(tags[OtherTest.getRandom()]);
+                t.addTagToFile(new FileBean("E:\\Pictures\\comic\\蘑菇的擬態日常\\第0"+j+"话\\"+i+".webp","this is a bean"+j+":"+i,l),tags[OtherTest.getRandom()]);
             }
             System.gc();
+        }
+        long s2 = System.currentTimeMillis();
+        System.out.println("time consume:"+(s2-s1));
+    }
+
+    public static int getRandom(){
+        return (int)(Math.random() * 100);
+    }
+
+    @Test
+    public void updateTimeUse() throws IOException {
+        TagFile t = new TagFile("E:\\test");
+        long s1 = System.currentTimeMillis();
+        HashSet<String> l = new HashSet<>();
+        l.add("tag5");
+        for(int i = 99;i>0;i--){
+            t.updateFile(new FileBean(i, "E:\\Pictures\\comic\\幸福观鸟\\第0"+i+"话\\"+i+".webp","this is a updated bean"+i,l));
         }
         long s2 = System.currentTimeMillis();
         System.out.println("time consume:"+(s2-s1));

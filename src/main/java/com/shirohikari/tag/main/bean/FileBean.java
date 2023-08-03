@@ -8,6 +8,10 @@ public class FileBean {
     private String description;
     private HashSet<String> tagSet;
 
+    public FileBean(String path, String description) {
+        this(path,description,new HashSet<>());
+    }
+
     public FileBean(String path, String description, HashSet<String> tagSet) {
         this(null,path,description,tagSet);
     }

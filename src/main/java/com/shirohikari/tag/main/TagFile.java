@@ -47,16 +47,31 @@ public class TagFile {
         return dataStorage.getTagBean(tag);
     }
 
+    /**
+     * 传入文件路径为文件添加标签
+     * @param filePath
+     * @param tag
+     */
     public void addTagToFile(String filePath,String tag){
         FileBean bean = dataStorage.getFileBean(filePath);
         bean = bean == null ? new FileBean(filePath,"",new HashSet<>()) : bean;
         addTagToFile(bean,new TagBean(tag));
     }
 
+    /**
+     * 传入fileBean对象和标签为文件添加标签，若fileBean对应之前添加过标签的文件，则对其进行的修改会被更新
+     * @param fileBean
+     * @param tag
+     */
     public void addTagToFile(FileBean fileBean,String tag){
         addTagToFile(fileBean,new TagBean(tag));
     }
 
+    /**
+     * 传入fileBean对象和标签为文件添加标签，若fileBean对应之前添加过标签的文件，则对其进行的修改会被更新
+     * @param fileBean
+     * @param tagBean
+     */
     public void addTagToFile(FileBean fileBean,TagBean tagBean){
         try {
             if(tagBean.getIdSet().size() != 0){
@@ -88,6 +103,65 @@ public class TagFile {
         }
     }
 
+    /**
+     * 传入文件路径和标签集合为文件添加标签
+     * @param path
+     * @param tags
+     */
+    public void addTagsToFile(String path,ArrayList<String> tags){
+        FileBean bean = dataStorage.getFileBean(path);
+        bean = bean == null ? new FileBean(path,"") : bean;
+        ArrayList<TagBean> tagBeans = new ArrayList<>();
+        for(String tag:tags){
+            tagBeans.add(new TagBean(tag));
+        }
+        addTagsToFile(bean,tagBeans);
+    }
+
+    /**
+     * 传入fileBean对象和标签集合为文件添加标签，若fileBean对应之前添加过标签的文件，则对其进行的修改会被更新
+     * @param fileBean
+     * @param tagBeans
+     */
+    public void addTagsToFile(FileBean fileBean,ArrayList<TagBean> tagBeans){
+        for(TagBean tagBean:tagBeans){
+            fileBean.getTagSet().add(tagBean.getTag());
+        }
+        FileBean bean = dataStorage.getFileBean(fileBean.getPath());
+        if(fileBean.getId() == null){
+            //可能传入了同一个对象两次
+            if(bean == null){
+                addTagToFile(fileBean);
+            //只要进行过任何修改就更新
+            }else if(!fileBean.getTagSet().equals(bean.getTagSet()) || !fileBean.getDescription().equals(bean.getDescription())){
+                fileBean.setId(bean.getId());
+                updateFile(fileBean);
+            }
+        //确认fileBean为在表内的而不是手动设置了id的对象
+        }else if(bean != null && bean.getId().equals(fileBean.getId())){
+            updateFile(fileBean);
+        }else{
+            throw new RuntimeException("禁止手动设置fileBean的id");
+        }
+    }
+
+    public void addTagToFile(FileBean fileBean){
+        if(fileBean == null || fileBean.getId() != null || dataStorage.getFileBean(fileBean.getPath()) != null){
+            throw new RuntimeException("传入的bean必须为未在表内的bean");
+        }
+        try {
+            dataStorage.addFileRecord(fileBean);
+            updateIdInExistTag(fileBean.getTagSet(),fileBean.getId());
+            addIdInNotExistTag(fileBean);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 更新对fileBean对象进行的修改
+     * @param fileBean
+     */
     public void updateFile(FileBean fileBean){
         if(fileBean == null || fileBean.getId() == null || dataStorage.getFileBean(fileBean.getId()) == null){
             throw new RuntimeException("传入的bean必须为已在表内的bean");
@@ -104,12 +178,23 @@ public class TagFile {
         }
     }
 
+    /**
+     * 如果文件路径拥有传入的标签则删除
+     * @param path
+     * @param tag
+     */
     public void deleteTagToFile(String path,String tag){
         deleteTagToFile(dataStorage.getFileBean(path),dataStorage.getTagBean(tag));
     }
 
+    /**
+     * 如果fileBean对象拥有传入的标签则删除，若fileBean对应之前添加过标签的文件，则对其进行的修改会被更新
+     * @param fileBean
+     * @param tagBean
+     */
     public void deleteTagToFile(FileBean fileBean,TagBean tagBean){
-        if(fileBean == null || !dataStorage.hasFile(fileBean.getPath())){
+        FileBean bean;
+        if(fileBean == null || (bean = dataStorage.getFileBean(fileBean.getPath())) == null){
             return;
         }
         if(removeFileWhenNoTag(fileBean,1)){
@@ -128,15 +213,27 @@ public class TagFile {
         try {
             dataStorage.updateFileRecord(fileBean);
             dataStorage.updateTagRecord(tagBean);
+            updateIdInExistTag(fileBean.getTagSet(),bean.getId());
+            addIdInNotExistTag(fileBean);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * 查询所有拥有该标签fileBean的id
+     * @param tag
+     * @return
+     */
     public HashSet<Integer> getFileBeansId(String tag){
         return dataStorage.getTagBean(tag).getIdSet();
     }
 
+    /**
+     * 查询拥有全部传入标签的fileBean的id
+     * @param tags
+     * @return
+     */
     public HashSet<Integer> getFileBeansId(ArrayList<String> tags){
         TagBean tagBean;
         HashSet<Integer> intersection = null;
@@ -153,6 +250,11 @@ public class TagFile {
         return intersection;
     }
 
+    /**
+     * 查询拥有全部传入标签的fileBean
+     * @param tags
+     * @return
+     */
     public ArrayList<FileBean> getFileBeans(ArrayList<String> tags){
         ArrayList<FileBean> beans = new ArrayList<>();
         HashSet<Integer> set = this.getFileBeansId(tags);
@@ -162,6 +264,11 @@ public class TagFile {
         return beans;
     }
 
+    /**
+     * 查询所有拥有该标签fileBean
+     * @param tag
+     * @return
+     */
     public ArrayList<FileBean> getFileBeans(String tag){
         ArrayList<FileBean> beans = new ArrayList<>();
         TagBean tagBean;
