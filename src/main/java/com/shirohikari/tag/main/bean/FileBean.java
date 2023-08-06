@@ -1,12 +1,23 @@
 package com.shirohikari.tag.main.bean;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
+/**
+ * 代表需要添加标签的文件的信息
+ * @author ShiroHikari
+ */
 public class FileBean {
     private Integer id;
     private String path;
     private String description;
     private HashSet<String> tagSet;
+
+    private transient ArrayList<String> oldPaths;
+
+    public FileBean(){
+        this(null,"");
+    }
 
     public FileBean(String path, String description) {
         this(path,description,new HashSet<>());
@@ -36,6 +47,10 @@ public class FileBean {
     }
 
     public void setPath(String path) {
+        if(path != null){
+            oldPaths = oldPaths == null ? new ArrayList<>() : oldPaths;
+            oldPaths.add(this.path);
+        }
         this.path = path;
     }
 
@@ -55,6 +70,10 @@ public class FileBean {
         this.tagSet = tagSet;
     }
 
+    public ArrayList<String> getOldPaths() {
+        return oldPaths;
+    }
+
     @Override
     public String toString() {
         return "FileBean{" +
@@ -62,6 +81,7 @@ public class FileBean {
                 ", path='" + path + '\'' +
                 ", description='" + description + '\'' +
                 ", tagSet=" + tagSet +
+                ", oldPaths=" + oldPaths +
                 '}';
     }
 }

@@ -72,6 +72,18 @@ public class TagFileTest {
     }
 
     @Test
+    public void updateFile2() throws IOException {
+        TagFile t = new TagFile("E:\\test");
+        FileBean bean = new FileBean("E:\\test\\1","this is a bean");
+        bean.getTagSet().add("tag1");
+        bean.getTagSet().add("tag2");
+        t.addTagToFile(bean);
+        bean.setPath("E:\\test\\2");
+        t.updateFile(bean);
+        System.out.println(t.hasFile("E:\\test\\1"));
+    }
+
+    @Test
     public void deleteTagToFile() throws IOException {
         TagFile t = new TagFile("E:\\test");
         t.addTagToFile("E:\\test\\1","tag1");

@@ -19,7 +19,7 @@ public class OtherTest {
         TagFile t = new TagFile("E:\\test");
         MemoryMXBean bean = ManagementFactory.getMemoryMXBean();
         MemoryUsage memoryUsage = bean.getHeapMemoryUsage();
-        System.out.println(memoryUsage.getUsed());
+        System.out.println(memoryUsage.getUsed() + "===" + memoryUsage.getUsed() / (1024*1024.0));
     }
 
     @Test
@@ -60,6 +60,16 @@ public class OtherTest {
         for(int i = 99;i>0;i--){
             t.updateFile(new FileBean(i, "E:\\Pictures\\comic\\幸福观鸟\\第0"+i+"话\\"+i+".webp","this is a updated bean"+i,l));
         }
+        long s2 = System.currentTimeMillis();
+        System.out.println("time consume:"+(s2-s1));
+    }
+
+    @Test
+    public void removeTagTimeUse() throws IOException {
+        TagFile t = new TagFile("E:\\test");
+        System.out.println("标签数:"+t.getFileBeans("标签1").size());
+        long s1 = System.currentTimeMillis();
+        t.removeTag("标签1");
         long s2 = System.currentTimeMillis();
         System.out.println("time consume:"+(s2-s1));
     }

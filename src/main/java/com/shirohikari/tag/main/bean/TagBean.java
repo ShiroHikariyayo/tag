@@ -2,9 +2,17 @@ package com.shirohikari.tag.main.bean;
 
 import java.util.HashSet;
 
+/**
+ * 代表标签的信息
+ * @author ShiroHikari
+ */
 public class TagBean {
     private String tag;
     private HashSet<Integer> idSet;
+
+    public TagBean(){
+        this("");
+    }
 
     public TagBean(String tag) {
         this(tag,new HashSet<>());

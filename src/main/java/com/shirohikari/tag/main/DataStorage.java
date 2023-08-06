@@ -128,7 +128,15 @@ public class DataStorage {
         fileRAF.seek(offset);
         String oldJson = fileRAF.readUTF();
         idFileBeanMap.replace(bean.getId(),bean);
-        pathFileBeanMap.replace(bean.getPath(),bean);
+        //可能会修改path
+        if(bean.getOldPaths() == null){
+            pathFileBeanMap.replace(bean.getPath(),bean);
+        }else {
+            for(String oldPath:bean.getOldPaths()){
+                pathFileBeanMap.remove(oldPath);
+            }
+            pathFileBeanMap.put(bean.getPath(),bean);
+        }
         String newJson = gson.toJson(bean);
         updateOffset(oldJson,newJson,offset,true);
         insertOrRemoveFileRecord(oldJson,newJson,offset);
@@ -247,9 +255,10 @@ public class DataStorage {
         if(add){
             if(bean.getTagSet() == null || bean.getTagSet().isEmpty()){
                 throw new IOException("FileBean为必须至少含有一个tag");
-            }
-            if(bean.getId() != null){
+            }else if(bean.getId() != null){
                 throw new IOException("插入时不允许手动设置FileBean的id");
+            }else if(bean.getPath() == null){
+                throw new IOException("文件路径不应为null");
             }
         }else {
             if(bean.getId() == null){
