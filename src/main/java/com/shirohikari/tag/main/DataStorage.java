@@ -22,9 +22,9 @@ public class DataStorage {
     private int nextId;
     private long tagEndOffset;
     private long fileEndOffset;
-    private File dir;
-    private File tagTable;
-    private File fileTable;
+    private final File dir;
+    private final File tagTable;
+    private final File fileTable;
     private HashSet<String> tags;
     private LinkedHashMap<Integer,Long> idOffsetMap;
     private HashMap<Integer,FileBean> idFileBeanMap;

@@ -12,40 +12,82 @@ import java.util.stream.Collectors;
  * @author ShiroHikari
  */
 public class TagFile {
-    private DataStorage dataStorage;
+    private final DataStorage dataStorage;
 
+    /**
+     * @param savePath 持久化文件储存位置
+     * @throws IOException
+     */
     public TagFile(String savePath) throws IOException {
         dataStorage = DataStorage.create(savePath);
     }
 
+    /**
+     * 通过id确认该文件是否有标签
+     * @param id
+     * @return
+     */
     public boolean hasFile(int id){
         return dataStorage.hasFile(id);
     }
 
+    /**
+     * 通过文件路径确认该文件是否有标签
+     * @param path
+     * @return
+     */
     public boolean hasFile(String path){
         return dataStorage.hasFile(path);
     }
 
+    /**
+     * 确认是否有标签的名字与传入参数相同
+     * @param tag
+     * @return
+     */
     public boolean hasTag(String tag){
         return dataStorage.hasTag(tag);
     }
 
+    /**
+     * 获取所有标签
+     * @return
+     */
     public Set<String> getAllTags(){
         return dataStorage.getAllTags();
     }
 
+    /**
+     * 通过id获取FileBean
+     * @param id
+     * @return
+     */
     public FileBean getFileBean(int id){
         return dataStorage.getFileBean(id);
     }
 
+    /**
+     * 通过文件路径获取FileBean
+     * @param path
+     * @return
+     */
     public FileBean getFileBean(String path) {
         return dataStorage.getFileBean(path);
     }
 
+    /**
+     * 通过标签名获取TagBean
+     * @param tag
+     * @return
+     */
     public TagBean getTagBean(String tag){
         return dataStorage.getTagBean(tag);
     }
 
+    /**
+     * 创建与传入参数tag同名的标签
+     * @param tag
+     */
     public void createTag(String tag){
         try {
             dataStorage.addTagRecord(new TagBean(tag));
@@ -54,6 +96,11 @@ public class TagFile {
         }
     }
 
+    /**
+     * 重命名标签
+     * @param oldName 旧标签名
+     * @param newName 新标签名
+     */
     public void renameTag(String oldName,String newName){
         TagBean tagBean = dataStorage.getTagBean(oldName);
         if(tagBean != null){
@@ -71,6 +118,10 @@ public class TagFile {
         }
     }
 
+    /**
+     * 批量移除标签
+     * @param tags
+     */
     public void removeTag(List<String> tags){
         Set<Integer> fileBeanIds = new HashSet<>();
         Set<FileBean> fileBeans = new HashSet<>();
@@ -102,6 +153,10 @@ public class TagFile {
         }
     }
 
+    /**
+     * 移除标签
+     * @param tag
+     */
     public void removeTag(String tag){
         TagBean tagBean = dataStorage.getTagBean(tag);
         if(tagBean != null){
@@ -215,6 +270,10 @@ public class TagFile {
         }
     }
 
+    /**
+     * 传入fileBean对象为文件添加标签,传入的fileBean必须未被添加过
+     * @param fileBean
+     */
     public void addTagToFile(FileBean fileBean){
         if(fileBean == null || fileBean.getId() != null || dataStorage.getFileBean(fileBean.getPath()) != null){
             throw new RuntimeException("传入的bean必须为未在表内的bean");
