@@ -82,8 +82,8 @@ public class TagFileTest {
         bean2.getTagSet().add("tag2");
         t.addTagToFile(bean);
         t.addTagToFile(bean2);
-        bean.setId(0);
-        bean.setPath("E:\\test\\3");
+        bean.setId(1);
+        bean.setPath("E:\\test\\2");
         t.updateFile(bean);
         System.out.println(t.hasFile("E:\\test\\1"));
     }
@@ -141,5 +141,21 @@ public class TagFileTest {
         set.add("t3");
         t.addTagToFile(new FileBean("E:\\test\\3","desc3",set));
         t.removeTag("t1");
+    }
+
+    @Test
+    public void removeTag2() throws IOException {
+        TagFile t = new TagFile("E:\\test");
+        HashSet<String> set = new HashSet<>();
+        set.add("t1");
+        t.addTagToFile(new FileBean("E:\\test\\1","desc1",set));
+        set.add("t2");
+        t.addTagToFile(new FileBean("E:\\test\\2","desc2",set));
+        set.add("t3");
+        t.addTagToFile(new FileBean("E:\\test\\3","desc3",set));
+        ArrayList<String> l = new ArrayList<>();
+        l.add("t1");
+        l.add("t2");
+        t.removeTag(l);
     }
 }

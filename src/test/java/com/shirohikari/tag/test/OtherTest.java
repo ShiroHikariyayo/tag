@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 public class OtherTest {
@@ -69,7 +70,24 @@ public class OtherTest {
         TagFile t = new TagFile("E:\\test");
         System.out.println("标签数:"+t.getFileBeans("标签1").size());
         long s1 = System.currentTimeMillis();
-        t.removeTag("标签1");
+        ArrayList<String> tags = new ArrayList<>();
+        tags.add("标签1");
+        t.removeTag(tags);
+        long s2 = System.currentTimeMillis();
+        System.out.println("time consume:"+(s2-s1));
+    }
+
+    @Test
+    public void removeMultiTagTimeUse() throws IOException {
+        TagFile t = new TagFile("E:\\test");
+        ArrayList<FileBean> fileBeans = t.getFileBeans("标签1");
+        fileBeans.addAll(t.getFileBeans("标签2"));
+        System.out.println("标签数:"+fileBeans.size());
+        long s1 = System.currentTimeMillis();
+        ArrayList<String> tags = new ArrayList<>();
+        tags.add("标签1");
+        tags.add("标签2");
+        t.removeTag(tags);
         long s2 = System.currentTimeMillis();
         System.out.println("time consume:"+(s2-s1));
     }

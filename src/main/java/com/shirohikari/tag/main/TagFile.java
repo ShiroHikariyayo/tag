@@ -54,9 +54,51 @@ public class TagFile {
         }
     }
 
+    public void renameTag(String oldName,String newName){
+        TagBean tagBean = dataStorage.getTagBean(oldName);
+        if(tagBean != null){
+            tagBean.setTag(newName);
+            try {
+                for(FileBean fileBean:getFileBeans(oldName)){
+                    fileBean.getTagSet().remove(oldName);
+                    fileBean.getTagSet().add(newName);
+                    updateFile(fileBean);
+                }
+                dataStorage.updateTagRecord(tagBean);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     public void removeTag(List<String> tags){
-        for(String tag:tags){
-            removeTag(tag);
+        Set<Integer> fileBeanIds = new HashSet<>();
+        Set<FileBean> fileBeans = new HashSet<>();
+        ArrayList<TagBean> tagBeans = new ArrayList<>();
+        if(tags != null){
+            for(String tag:tags){
+                TagBean tagBean = dataStorage.getTagBean(tag);
+                tagBeans.add(tagBean);
+                fileBeanIds.addAll(tagBean.getIdSet());
+            }
+            for(Integer id:fileBeanIds){
+                FileBean fileBean = dataStorage.getFileBean(id);
+                fileBean.getTagSet().removeAll(tags);
+                fileBeans.add(fileBean);
+            }
+            List<FileBean> beans = fileBeans.stream().sorted(((o1, o2) -> o2.getId() - o1.getId())).collect(Collectors.toList());
+            try {
+                for(FileBean bean:beans) {
+                    if(!removeFileWhenNoTag(bean,0)){
+                        dataStorage.updateFileRecord(bean);
+                    }
+                }
+                for(TagBean tagBean:tagBeans){
+                    dataStorage.removeTagRecord(tagBean);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -67,7 +109,9 @@ public class TagFile {
             try {
                 for(FileBean bean:beans) {
                     bean.getTagSet().remove(tag);
-                    updateFile(bean);
+                    if(!removeFileWhenNoTag(bean,0)){
+                        dataStorage.updateFileRecord(bean);
+                    }
                 }
                 dataStorage.removeTagRecord(tagBean);
             } catch (IOException e) {

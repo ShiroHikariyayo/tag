@@ -28,6 +28,7 @@ public class DataStorage {
     private HashSet<String> tags;
     private LinkedHashMap<Integer,Long> idOffsetMap;
     private HashMap<Integer,FileBean> idFileBeanMap;
+    private HashMap<String,Integer> pathIdMap;
     private HashMap<String,FileBean> pathFileBeanMap;
     private HashMap<String, Long> tagOffsetMap;
     private HashMap<String, TagBean> tagTagBeanMap;
@@ -61,6 +62,7 @@ public class DataStorage {
         fileRAF = new RandomAccessFile(fileTable,"rw");
         tags = new HashSet<>();
         idOffsetMap = new LinkedHashMap<>();
+        pathIdMap = new HashMap<>();
         idFileBeanMap = new HashMap<>();
         pathFileBeanMap = new HashMap<>();
         tagOffsetMap = new HashMap<>();
@@ -136,8 +138,10 @@ public class DataStorage {
             pathFileBeanMap.replace(bean.getPath(),bean);
         }else {
             for(String oldPath:bean.getOldPaths()){
+                pathIdMap.remove(oldPath);
                 pathFileBeanMap.remove(oldPath);
             }
+            pathIdMap.put(bean.getPath(),bean.getId());
             pathFileBeanMap.put(bean.getPath(),bean);
         }
         String newJson = gson.toJson(bean);
@@ -152,6 +156,7 @@ public class DataStorage {
         String oldJson = fileRAF.readUTF();
         idOffsetMap.remove(bean.getId());
         idFileBeanMap.remove(bean.getId());
+        pathIdMap.remove(bean.getPath());
         pathFileBeanMap.remove(bean.getPath());
         updateOffset(oldJson,null,offset,true);
         insertOrRemoveFileRecord(oldJson,null,offset);
@@ -270,18 +275,16 @@ public class DataStorage {
         }else if(!idFileBeanMap.containsKey(bean.getId())){
             throw new IOException("未发现相应记录");
         }
-        /*
-        在id和path均为修改的情况下，外部传入的bean和用外部传入bean的path找到的cacheBean的id和path均相同
-        在idFileBeanMap含有此id而未在pathFileBeanMap找到cacheBean的情况下，说明外部更改了path
-        在用path找到了cacheBean而两者id不同时，说明id被修改
-         */
-        FileBean cacheBean = pathFileBeanMap.get(bean.getPath());
+        //找不到id时则更改了path
+        Integer id = pathIdMap.get(bean.getPath());
         if(operate == UPDATE){
-            if(cacheBean != null && !bean.getId().equals(cacheBean.getId())){
+            if(id != null && !bean.getId().equals(id)){
                 throw new IOException("禁止修改id");
+            }else if(!bean.getId().equals(id)){
+                throw new IOException("禁止修改id和path");
             }
         }else if(operate == REMOVE){
-            if(cacheBean != null && !bean.getId().equals(cacheBean.getId())){
+            if(!bean.getId().equals(id)){
                 throw new IOException("禁止修改id或path");
             }
         }
@@ -307,6 +310,7 @@ public class DataStorage {
 
     private void addToFileMaps(FileBean bean,long offset){
         idOffsetMap.put(bean.getId(),offset);
+        pathIdMap.put(bean.getPath(),bean.getId());
         idFileBeanMap.put(bean.getId(),bean);
         pathFileBeanMap.put(bean.getPath(),bean);
     }
