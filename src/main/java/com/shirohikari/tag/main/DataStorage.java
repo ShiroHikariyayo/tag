@@ -13,6 +13,9 @@ import java.util.*;
  * @author ShiroHikari
  */
 public class DataStorage {
+    private static final int ADD = 0;
+    private static final int UPDATE = 1;
+    private static final int REMOVE = 2;
     private static final String TAG_TABLE = "tag_table";
     private static final String FILE_TABLE = "file_table";
 
@@ -114,7 +117,7 @@ public class DataStorage {
     }
 
     public void addFileRecord(FileBean bean) throws IOException {
-        checkFileBean(bean,true);
+        checkFileBean(bean,ADD);
         bean.setId(nextId++);
         addToFileMaps(bean,fileEndOffset);
         String json = gson.toJson(bean);
@@ -123,7 +126,7 @@ public class DataStorage {
     }
 
     public void updateFileRecord(FileBean bean) throws IOException {
-        checkFileBean(bean,false);
+        checkFileBean(bean,UPDATE);
         long offset = idOffsetMap.get(bean.getId());
         fileRAF.seek(offset);
         String oldJson = fileRAF.readUTF();
@@ -143,7 +146,7 @@ public class DataStorage {
     }
 
     public void removeFileRecord(FileBean bean) throws IOException {
-        checkFileBean(bean,false);
+        checkFileBean(bean,REMOVE);
         long offset = idOffsetMap.get(bean.getId());
         fileRAF.seek(offset);
         String oldJson = fileRAF.readUTF();
@@ -155,7 +158,7 @@ public class DataStorage {
     }
 
     public void addTagRecord(TagBean bean) throws IOException {
-        checkTagBean(bean,true);
+        checkTagBean(bean,ADD);
         tags.add(bean.getTag());
         tagOffsetMap.put(bean.getTag(),tagEndOffset);
         tagTagBeanMap.put(bean.getTag(),bean);
@@ -165,7 +168,7 @@ public class DataStorage {
     }
 
     public void updateTagRecord(TagBean bean) throws IOException {
-        checkTagBean(bean,false);
+        checkTagBean(bean,UPDATE);
         long offset = tagOffsetMap.get(bean.getTag());
         tagRAF.seek(offset);
         String oldJson = tagRAF.readUTF();
@@ -176,7 +179,7 @@ public class DataStorage {
     }
 
     public void removeTagRecord(TagBean bean) throws IOException {
-        checkTagBean(bean,false);
+        checkTagBean(bean,REMOVE);
         long offset = tagOffsetMap.get(bean.getTag());
         tagRAF.seek(offset);
         String oldJson = tagRAF.readUTF();
@@ -248,32 +251,47 @@ public class DataStorage {
         tmp.delete();
     }
 
-    private void checkFileBean(FileBean bean,boolean add) throws IOException {
+    private void checkFileBean(FileBean bean,int operate) throws IOException {
         if(bean == null){
             throw new IOException("FileBean为null");
+        }else if(bean.getPath() == null){
+            throw new IOException("文件路径不应为null");
         }
-        if(add){
+        if(operate == ADD){
             if(bean.getTagSet() == null || bean.getTagSet().isEmpty()){
                 throw new IOException("FileBean为必须至少含有一个tag");
             }else if(bean.getId() != null){
                 throw new IOException("插入时不允许手动设置FileBean的id");
-            }else if(bean.getPath() == null){
-                throw new IOException("文件路径不应为null");
             }
-        }else {
-            if(bean.getId() == null){
-                throw new IOException("需要指定FileBean及其id");
-            }else if(!idFileBeanMap.containsKey(bean.getId())){
-                throw new IOException("未发现相应记录");
+            return;
+        }
+        if(bean.getId() == null){
+            throw new IOException("需要指定FileBean及其id");
+        }else if(!idFileBeanMap.containsKey(bean.getId())){
+            throw new IOException("未发现相应记录");
+        }
+        /*
+        在id和path均为修改的情况下，外部传入的bean和用外部传入bean的path找到的cacheBean的id和path均相同
+        在idFileBeanMap含有此id而未在pathFileBeanMap找到cacheBean的情况下，说明外部更改了path
+        在用path找到了cacheBean而两者id不同时，说明id被修改
+         */
+        FileBean cacheBean = pathFileBeanMap.get(bean.getPath());
+        if(operate == UPDATE){
+            if(cacheBean != null && !bean.getId().equals(cacheBean.getId())){
+                throw new IOException("禁止修改id");
+            }
+        }else if(operate == REMOVE){
+            if(cacheBean != null && !bean.getId().equals(cacheBean.getId())){
+                throw new IOException("禁止修改id或path");
             }
         }
     }
 
-    private void checkTagBean(TagBean bean,boolean add) throws IOException {
+    private void checkTagBean(TagBean bean,int operate) throws IOException {
         if(bean == null){
             throw new IOException("TagBean为null");
         }
-        if(add){
+        if(operate == ADD){
             if(tagTagBeanMap.containsKey(bean.getTag())){
                 throw new IOException("不可添加已有的tag");
             }

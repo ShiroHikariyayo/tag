@@ -67,7 +67,7 @@ public class TagFile {
             try {
                 for(FileBean bean:beans) {
                     bean.getTagSet().remove(tag);
-                    dataStorage.updateFileRecord(bean);
+                    updateFile(bean);
                 }
                 dataStorage.removeTagRecord(tagBean);
             } catch (IOException e) {
@@ -166,11 +166,8 @@ public class TagFile {
                 fileBean.setId(bean.getId());
                 updateFile(fileBean);
             }
-        //确认fileBean为在表内的而不是手动设置了id的对象
-        }else if(bean != null && bean.getId().equals(fileBean.getId())){
-            updateFile(fileBean);
         }else{
-            throw new RuntimeException("禁止手动设置fileBean的id");
+            updateFile(fileBean);
         }
     }
 
@@ -226,13 +223,13 @@ public class TagFile {
         if(fileBean == null || (bean = dataStorage.getFileBean(fileBean.getPath())) == null){
             return;
         }
-        if(removeFileWhenNoTag(fileBean,1)){
-            return;
-        }
         if(tagBean == null || !dataStorage.getAllTags().contains(tagBean.getTag())){
             return;
         }
         if(!fileBean.getTagSet().contains(tagBean.getTag())){
+            return;
+        }
+        if(removeFileWhenNoTag(fileBean,1)){
             return;
         }
         fileBean = dataStorage.getFileBean(fileBean.getPath());

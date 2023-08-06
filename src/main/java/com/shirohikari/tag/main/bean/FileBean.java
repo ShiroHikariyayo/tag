@@ -31,7 +31,7 @@ public class FileBean {
         this.id = id;
         this.path = path;
         this.description = description;
-        this.tagSet = tagSet;
+        this.tagSet = new HashSet<>(tagSet);
     }
 
     public Integer getId() {
@@ -67,7 +67,7 @@ public class FileBean {
     }
 
     public void setTagSet(HashSet<String> tagSet) {
-        this.tagSet = tagSet;
+        this.tagSet = new HashSet<>(tagSet);
     }
 
     public ArrayList<String> getOldPaths() {

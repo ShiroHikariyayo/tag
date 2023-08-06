@@ -36,7 +36,7 @@ public class TagBean {
     }
 
     public void setIdSet(HashSet<Integer> idSet) {
-        this.idSet = idSet;
+        this.idSet = new HashSet<>(idSet);
     }
 
     @Override

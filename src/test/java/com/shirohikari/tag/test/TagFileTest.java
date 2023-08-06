@@ -24,6 +24,7 @@ public class TagFileTest {
         t.addTagToFile(new FileBean("E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\1.webp","数据1",l),new TagBean("t5"));
         t.addTagToFile("E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\2.webp","tag1");
         t.addTagToFile("E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\2.webp","tag2");
+        t.addTagToFile(t.getFileBean(0),new TagBean("t6"));
     }
 
     @Test
@@ -44,6 +45,7 @@ public class TagFileTest {
         TagBean b = new TagBean("t2");
         l.add(b);
         //t.addTagsToFile(new FileBean(0,"E:\\test\\1","desc",new HashSet<>()),l);
+        t.addTagsToFile(new FileBean("E:\\test\\1","desc"),l);
         t.addTagsToFile(new FileBean("E:\\test\\1","desc"),l);
         l.remove(b);
         l.add(new TagBean("t3"));
@@ -74,11 +76,14 @@ public class TagFileTest {
     @Test
     public void updateFile2() throws IOException {
         TagFile t = new TagFile("E:\\test");
-        FileBean bean = new FileBean("E:\\test\\1","this is a bean");
+        FileBean bean = new FileBean("E:\\test\\1","this is a bean1");
+        FileBean bean2 = new FileBean("E:\\test\\2","this is a bean2");
         bean.getTagSet().add("tag1");
-        bean.getTagSet().add("tag2");
+        bean2.getTagSet().add("tag2");
         t.addTagToFile(bean);
-        bean.setPath("E:\\test\\2");
+        t.addTagToFile(bean2);
+        bean.setId(0);
+        bean.setPath("E:\\test\\3");
         t.updateFile(bean);
         System.out.println(t.hasFile("E:\\test\\1"));
     }
