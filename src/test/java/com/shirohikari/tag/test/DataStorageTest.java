@@ -71,4 +71,10 @@ public class DataStorageTest {
         d.removeTagRecord(new TagBean("tag2"));
         d.removeTagRecord(new TagBean("tag4"));
     }
+
+    @Test
+    public void backup() throws IOException {
+        DataStorage d = DataStorage.create("E:\\test");
+        d.backup("test1");
+    }
 }

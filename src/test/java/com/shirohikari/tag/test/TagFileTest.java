@@ -167,4 +167,21 @@ public class TagFileTest {
         t.addTagInDirectory(new File("E:\\test"),new TagBean("tag1"),false);
         t.addTagInDirectory(new File("E:\\test"),new TagBean("tag2"),false);
     }
+
+    @Test
+    public void backup() throws IOException {
+        TagFile t = new TagFile("E:\\test");
+        t.backup("备份1");
+        System.out.println("开始除所有标签");
+        ArrayList<String> tags = new ArrayList<>();
+        for (int i=1;i<=50;i++){
+            tags.add("标签"+i);
+        }
+        t.removeTag(tags);
+        System.out.println("已移除所有标签");
+        t.recover("备份1");
+        System.out.println(t.hasTag("标签1"));
+        System.out.println(t.hasFile(0));
+        t.removeBackup("备份1");
+    }
 }

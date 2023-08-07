@@ -1,6 +1,7 @@
 package com.shirohikari.tag.main.bean;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * @author ShiroHikari
@@ -8,6 +9,15 @@ import java.util.ArrayList;
 public class InfoBean {
     private Integer tableVersion;
     private ArrayList<String> backups;
+
+    public InfoBean() {
+        this(null,new ArrayList<>());
+    }
+
+    public InfoBean(Integer tableVersion, ArrayList<String> backups) {
+        this.tableVersion = tableVersion;
+        this.backups = new ArrayList<>(backups);
+    }
 
     public Integer getTableVersion() {
         return tableVersion;
@@ -22,6 +32,6 @@ public class InfoBean {
     }
 
     public void setBackups(ArrayList<String> backups) {
-        this.backups = backups;
+        this.backups = new ArrayList<>(backups);
     }
 }

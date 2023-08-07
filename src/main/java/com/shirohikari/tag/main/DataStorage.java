@@ -207,6 +207,48 @@ public class DataStorage {
         insertOrRemoveTagRecord(oldJson,null,offset);
     }
 
+    public void backup(String name) throws IOException {
+        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info)));
+        InfoBean infoBean = gson.fromJson(new String(bytes),InfoBean.class);
+        if(infoBean.getBackups().contains(name)){
+            throw new IOException("备份名称已被占用");
+        }
+        File saveFolder = new File(backup,name);
+        saveFolder.mkdir();
+        File backupTagTable = new File(saveFolder,TAG_TABLE);
+        File backupFileTable = new File(saveFolder,FILE_TABLE);
+        tagTable.createNewFile();
+        fileTable.createNewFile();
+        FileUtil.copyFile(tagTable,backupTagTable);
+        FileUtil.copyFile(fileTable,backupFileTable);
+        infoBean.getBackups().add(name);
+        FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent());
+    }
+
+    public void recover(String name) throws IOException {
+        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info)));
+        InfoBean infoBean = gson.fromJson(new String(bytes),InfoBean.class);
+        if(!infoBean.getBackups().contains(name)){
+            throw new IOException("未找到该备份");
+        }
+        tagRAF.close();
+        fileRAF.close();
+        File folder = new File(backup,name);
+        File backupTagTable = new File(folder,TAG_TABLE);
+        File backupFileTable = new File(folder,FILE_TABLE);
+        FileUtil.copyFile(backupTagTable,tagTable);
+        FileUtil.copyFile(backupFileTable,fileTable);
+        init();
+    }
+
+    public void removeBackup(String name) throws IOException {
+        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info)));
+        InfoBean infoBean = gson.fromJson(new String(bytes),InfoBean.class);
+        FileUtil.remove(new File(backup,name));
+        infoBean.getBackups().remove(name);
+        FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent());
+    }
+
     private void updateOffset(String oldJson,String newJson,long offset,boolean file) throws IOException {
         long len;
         if(newJson != null){
@@ -333,7 +375,7 @@ public class DataStorage {
         if("".equals(json)){
             InfoBean infoBean = new InfoBean();
             infoBean.setTableVersion(TABLE_VERSION);
-            FileUtil.saveFile(gson.toJson(infoBean).getBytes(),"info",info.getParent());
+            FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent());
             return true;
         }else {
             InfoBean infoBean = gson.fromJson(json,InfoBean.class);

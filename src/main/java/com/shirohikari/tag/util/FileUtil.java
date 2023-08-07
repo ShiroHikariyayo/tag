@@ -1,7 +1,11 @@
 package com.shirohikari.tag.util;
 
 import java.io.*;
+import java.nio.channels.FileChannel;
 
+/**
+ * @author ShiroHikari
+ */
 public class FileUtil {
 
     /**
@@ -9,8 +13,9 @@ public class FileUtil {
      * @param file
      */
     public static void makeDirectory(File file){
-        if(file.exists())
+        if(file.exists()) {
             return;
+        }
         String[] paths = file.getPath().split("\\\\");
         StringBuilder curPath = new StringBuilder();
         for(String dir:paths){
@@ -24,8 +29,9 @@ public class FileUtil {
     }
 
     public static void makeFile(File file) throws IOException {
-        if(file.exists())
+        if(file.exists()) {
             return;
+        }
         makeDirectory(new File(file.getParent()));
         file.createNewFile();
     }
@@ -35,6 +41,19 @@ public class FileUtil {
             return file.list().length == 0;
         } else {
             return true;
+        }
+    }
+
+    public static void remove(File dir){
+        if(dir != null && dir.exists()){
+            for(File file:dir.listFiles()){
+                if(file.isDirectory()){
+                    remove(file);
+                }else {
+                    file.delete();
+                }
+            }
+            dir.delete();
         }
     }
 
@@ -93,4 +112,16 @@ public class FileUtil {
         }
     }
 
+    public static void copyFile(File source, File dest) throws IOException {
+        FileChannel inputChannel = null;
+        FileChannel outputChannel = null;
+        try {
+            inputChannel = new FileInputStream(source).getChannel();
+            outputChannel = new FileOutputStream(dest).getChannel();
+            outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
+        } finally {
+            inputChannel.close();
+            outputChannel.close();
+        }
+    }
 }

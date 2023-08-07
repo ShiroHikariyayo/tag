@@ -86,6 +86,38 @@ public class TagFile {
     }
 
     /**
+     * 备份持久化文件
+     * @param name 备份名
+     */
+    public void backup(String name){
+        try {
+            dataStorage.backup(name);
+        } catch (IOException e) {
+            throw  new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 恢复持久化文件
+     * @param name 备份名
+     */
+    public void recover(String name){
+        try {
+            dataStorage.recover(name);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void removeBackup(String name){
+        try {
+            dataStorage.removeBackup(name);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * 创建与传入参数tag同名的标签
      * @param tag
      */
