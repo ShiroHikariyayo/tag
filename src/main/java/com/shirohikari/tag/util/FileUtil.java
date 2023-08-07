@@ -64,4 +64,33 @@ public class FileUtil {
         in.close();
     }
 
+    /**
+     * 从输入流中获取字节数组
+     *
+     * @param inputStream
+     * @return
+     * @throws IOException
+     */
+    public static byte[] readInputStream(InputStream inputStream) throws IOException {
+        byte[] buffer = new byte[4096];
+        int len = 0;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        while ((len = inputStream.read(buffer)) != -1) {
+            bos.write(buffer, 0, len);
+        }
+        bos.close();
+        return bos.toByteArray();
+    }
+
+    public static void saveFile(byte[] data,String fileName,String savePath) throws IOException {
+        File saveDir = new File(savePath);
+        makeDirectory(saveDir);
+        File file = new File(saveDir + File.separator + fileName);
+        FileOutputStream fos = new FileOutputStream(file);
+        fos.write(data);
+        if (fos != null) {
+            fos.close();
+        }
+    }
+
 }

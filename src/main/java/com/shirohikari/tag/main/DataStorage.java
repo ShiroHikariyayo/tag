@@ -2,6 +2,7 @@ package com.shirohikari.tag.main;
 
 import com.google.gson.Gson;
 import com.shirohikari.tag.main.bean.FileBean;
+import com.shirohikari.tag.main.bean.InfoBean;
 import com.shirohikari.tag.main.bean.TagBean;
 import com.shirohikari.tag.util.FileUtil;
 
@@ -13,18 +14,20 @@ import java.util.*;
  * @author ShiroHikari
  */
 public class DataStorage {
-    private static final int ADD = 0;
-    private static final int UPDATE = 1;
-    private static final int REMOVE = 2;
+    private static final int TABLE_VERSION = 1;
     private static final String TAG_TABLE = "tag_table";
     private static final String FILE_TABLE = "file_table";
+    private static final String INFO = "info";
+    private static final String BACKUP = "backup";
 
     private int nextId;
     private long tagEndOffset;
     private long fileEndOffset;
     private final File dir;
+    private final File backup;
     private final File tagTable;
     private final File fileTable;
+    private final File info;
     private HashSet<String> tags;
     private LinkedHashMap<Integer,Long> idOffsetMap;
     private HashMap<Integer,FileBean> idFileBeanMap;
@@ -36,28 +39,37 @@ public class DataStorage {
     private RandomAccessFile fileRAF;
     private Gson gson;
 
-    private DataStorage(File dir,File tagTable,File fileTable) throws IOException {
+    private DataStorage(File dir,File backup,File tagTable,File fileTable,File info) throws IOException {
         this.dir = dir;
+        this.backup = backup;
         this.tagTable = tagTable;
         this.fileTable = fileTable;
+        this.info = info;
         init();
     }
 
     public static DataStorage create(String dirPath) throws IOException {
         File dir = new File(dirPath);
+        File backup = new File(dirPath,BACKUP);
         File tabTable = new File(dirPath,TAG_TABLE);
         File fileTable = new File(dirPath,FILE_TABLE);
-        if(!FileUtil.isEmptyDirectory(dir) && !tabTable.exists() && !fileTable.exists()){
+        File info = new File(dirPath,INFO);
+        if(!FileUtil.isEmptyDirectory(dir) && !tabTable.exists()
+                && !fileTable.exists() && !info.exists() && !backup.exists()){
             throw new IOException("文件夹不为空");
         }
-        FileUtil.makeDirectory(dir);
+        FileUtil.makeDirectory(backup);
         FileUtil.makeFile(tabTable);
         FileUtil.makeFile(fileTable);
-        return new DataStorage(dir,tabTable,fileTable);
+        FileUtil.makeFile(info);
+        return new DataStorage(dir,backup,tabTable,fileTable,info);
     }
 
     private void init() throws IOException {
         gson = new Gson();
+        if(!canRead()){
+            throw new IOException("版本不统一");
+        }
         tagRAF = new RandomAccessFile(tagTable,"rw");
         fileRAF = new RandomAccessFile(fileTable,"rw");
         tags = new HashSet<>();
@@ -119,7 +131,7 @@ public class DataStorage {
     }
 
     public void addFileRecord(FileBean bean) throws IOException {
-        checkFileBean(bean,ADD);
+        checkFileBean(bean,Operate.ADD);
         bean.setId(nextId++);
         addToFileMaps(bean,fileEndOffset);
         String json = gson.toJson(bean);
@@ -128,7 +140,7 @@ public class DataStorage {
     }
 
     public void updateFileRecord(FileBean bean) throws IOException {
-        checkFileBean(bean,UPDATE);
+        checkFileBean(bean,Operate.UPDATE);
         long offset = idOffsetMap.get(bean.getId());
         fileRAF.seek(offset);
         String oldJson = fileRAF.readUTF();
@@ -150,7 +162,7 @@ public class DataStorage {
     }
 
     public void removeFileRecord(FileBean bean) throws IOException {
-        checkFileBean(bean,REMOVE);
+        checkFileBean(bean,Operate.REMOVE);
         long offset = idOffsetMap.get(bean.getId());
         fileRAF.seek(offset);
         String oldJson = fileRAF.readUTF();
@@ -163,7 +175,7 @@ public class DataStorage {
     }
 
     public void addTagRecord(TagBean bean) throws IOException {
-        checkTagBean(bean,ADD);
+        checkTagBean(bean,Operate.ADD);
         tags.add(bean.getTag());
         tagOffsetMap.put(bean.getTag(),tagEndOffset);
         tagTagBeanMap.put(bean.getTag(),bean);
@@ -173,7 +185,7 @@ public class DataStorage {
     }
 
     public void updateTagRecord(TagBean bean) throws IOException {
-        checkTagBean(bean,UPDATE);
+        checkTagBean(bean,Operate.UPDATE);
         long offset = tagOffsetMap.get(bean.getTag());
         tagRAF.seek(offset);
         String oldJson = tagRAF.readUTF();
@@ -184,7 +196,7 @@ public class DataStorage {
     }
 
     public void removeTagRecord(TagBean bean) throws IOException {
-        checkTagBean(bean,REMOVE);
+        checkTagBean(bean,Operate.REMOVE);
         long offset = tagOffsetMap.get(bean.getTag());
         tagRAF.seek(offset);
         String oldJson = tagRAF.readUTF();
@@ -262,7 +274,7 @@ public class DataStorage {
         }else if(bean.getPath() == null){
             throw new IOException("文件路径不应为null");
         }
-        if(operate == ADD){
+        if(operate == Operate.ADD){
             if(bean.getTagSet() == null || bean.getTagSet().isEmpty()){
                 throw new IOException("FileBean为必须至少含有一个tag");
             }else if(bean.getId() != null){
@@ -277,13 +289,13 @@ public class DataStorage {
         }
         //找不到id时则更改了path
         Integer id = pathIdMap.get(bean.getPath());
-        if(operate == UPDATE){
+        if(operate == Operate.UPDATE){
             if(id != null && !bean.getId().equals(id)){
                 throw new IOException("禁止修改id");
             }else if(!bean.getId().equals(id)){
                 throw new IOException("禁止修改id和path");
             }
-        }else if(operate == REMOVE){
+        }else if(operate == Operate.REMOVE){
             if(!bean.getId().equals(id)){
                 throw new IOException("禁止修改id或path");
             }
@@ -294,7 +306,7 @@ public class DataStorage {
         if(bean == null){
             throw new IOException("TagBean为null");
         }
-        if(operate == ADD){
+        if(operate == Operate.ADD){
             if(tagTagBeanMap.containsKey(bean.getTag())){
                 throw new IOException("不可添加已有的tag");
             }
@@ -313,5 +325,29 @@ public class DataStorage {
         pathIdMap.put(bean.getPath(),bean.getId());
         idFileBeanMap.put(bean.getId(),bean);
         pathFileBeanMap.put(bean.getPath(),bean);
+    }
+
+    private boolean canRead() throws IOException {
+        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info)));
+        String json = new String(bytes);
+        if("".equals(json)){
+            InfoBean infoBean = new InfoBean();
+            infoBean.setTableVersion(TABLE_VERSION);
+            FileUtil.saveFile(gson.toJson(infoBean).getBytes(),"info",info.getParent());
+            return true;
+        }else {
+            InfoBean infoBean = gson.fromJson(json,InfoBean.class);
+            if(infoBean.getTableVersion().equals(TABLE_VERSION)){
+                return true;
+            }else {
+                return false;
+            }
+        }
+    }
+
+    private static class Operate{
+        private static final int ADD = 0;
+        private static final int UPDATE = 1;
+        private static final int REMOVE = 2;
     }
 }

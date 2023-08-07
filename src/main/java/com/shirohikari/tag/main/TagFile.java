@@ -109,7 +109,7 @@ public class TagFile {
                 for(FileBean fileBean:getFileBeans(oldName)){
                     fileBean.getTagSet().remove(oldName);
                     fileBean.getTagSet().add(newName);
-                    updateFile(fileBean);
+                    dataStorage.updateFileRecord(fileBean);
                 }
                 dataStorage.updateTagRecord(tagBean);
             } catch (IOException e) {
