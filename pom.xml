@@ -6,7 +6,11 @@
 
     <groupId>com.shirohikari</groupId>
     <artifactId>tag</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1.1</version>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <dependencies>
         <dependency>
