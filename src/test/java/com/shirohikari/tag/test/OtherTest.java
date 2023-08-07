@@ -31,16 +31,17 @@ public class OtherTest {
         for(int i=0;i<100;i++){
             tags[i] = "标签"+i;
         }
-        for(int j = 1;j<=900;j++){
+        for(int j = 1;j<=50;j++){
             for (int i = 1;i<=100;i++){
                 HashSet<String> l = new HashSet<>();
-                if(i % 13 == 0) l.add("tag1");
-                if(i % 14 == 0) l.add("tag2");
-                if(i % 15 == 0) l.add("tag3");
-                if(i % 16 == 0) l.add("tag4");
-                l.add(tags[OtherTest.getRandom()]);
-                l.add(tags[OtherTest.getRandom()]);
-                t.addTagToFile(new FileBean("E:\\Pictures\\comic\\蘑菇的擬態日常\\第0"+j+"话\\"+i+".webp","this is a bean"+j+":"+i,l),tags[OtherTest.getRandom()]);
+                if(i % 6 == 0) l.add("tag1");
+                if(i % 7 == 0) l.add("tag2");
+                if(i % 8 == 0) l.add("tag3");
+                if(i % 9 == 0) l.add("tag4");
+                l.add(tags[OtherTest.getRandom(0,50)]);
+                l.add(tags[OtherTest.getRandom(0,50)]);
+                l.add(tags[OtherTest.getRandom(0,50)]);
+                t.addTagToFile(new FileBean("E:\\Pictures\\comic\\蘑菇的擬態日常\\第0"+j+"话\\"+i+".webp","this is a bean"+j+":"+i,l));
             }
             System.gc();
         }
@@ -48,8 +49,8 @@ public class OtherTest {
         System.out.println("time consume:"+(s2-s1));
     }
 
-    public static int getRandom(){
-        return (int)(Math.random() * 100);
+    public static int getRandom(int min,int max){
+        return min + (int)(Math.random() * (max-min+1));
     }
 
     @Test

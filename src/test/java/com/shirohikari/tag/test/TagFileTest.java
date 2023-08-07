@@ -5,6 +5,7 @@ import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.main.bean.TagBean;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -157,5 +158,13 @@ public class TagFileTest {
         l.add("t1");
         l.add("t2");
         t.removeTag(l);
+    }
+
+    @Test
+    public void addTagInDirectory() throws IOException {
+        TagFile t = new TagFile("E:\\test");
+        t.addTagInDirectory(new File("E:\\test"),new TagBean("tag1"),true);
+        t.addTagInDirectory(new File("E:\\test"),new TagBean("tag1"),false);
+        t.addTagInDirectory(new File("E:\\test"),new TagBean("tag2"),false);
     }
 }

@@ -3,6 +3,7 @@ package com.shirohikari.tag.main;
 import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.main.bean.TagBean;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -202,7 +203,7 @@ public class TagFile {
      */
     public void addTagToFile(FileBean fileBean,TagBean tagBean){
         try {
-            if(tagBean.getIdSet().size() != 0){
+            if(tagBean.getIdSet().size() != 0 && !tagBean.equals(dataStorage.getTagBean(tagBean.getTag()))){
                 throw new RuntimeException("添加标签时不可手动设置idList");
             }
             fileBean.getTagSet().add(tagBean.getTag());
@@ -288,6 +289,50 @@ public class TagFile {
     }
 
     /**
+     * 给文件夹内的所有文件添加标签
+     * @param path
+     * @param tag
+     * @param addToDir 是否给文件夹也添加标签
+     */
+    public void addTagInDirectory(String path,String tag,boolean addToDir){
+        addTagInDirectory(new File(path),new TagBean(tag),addToDir);
+    }
+
+    /**
+     * 给文件夹内的所有文件添加tag
+     * @param dir
+     * @param tagBean
+     * @param addToDir 是否给文件夹也添加标签
+     */
+    public void addTagInDirectory(File dir,TagBean tagBean,boolean addToDir){
+        if(!dir.exists()){
+            return;
+        }
+        if(!dir.isDirectory()){
+            throw new RuntimeException("提供的路径并非文件夹");
+        }
+        if(tagBean == null || tagBean.getTag() == null || "".equals(tagBean.getTag())){
+            throw new RuntimeException("请指定tag");
+        }
+        for(File file: Objects.requireNonNull(dir.listFiles())){
+            FileBean fileBean = dataStorage.getFileBean(file.getPath());
+            if(file.isDirectory()){
+                addTagInDirectory(file,tagBean,addToDir);
+            }
+            if((file.isDirectory() && addToDir) || file.isFile()){
+                if(fileBean == null){
+                    fileBean = new FileBean(file.getPath(),"");
+                    fileBean.getTagSet().add(tagBean.getTag());
+                    addTagToFile(fileBean);
+                }else{
+                    fileBean.getTagSet().add(tagBean.getTag());
+                    updateFile(fileBean);
+                }
+            }
+        }
+    }
+
+    /**
      * 更新对fileBean对象进行的修改
      * @param fileBean
      */
@@ -365,11 +410,12 @@ public class TagFile {
      */
     public Set<Integer> getFileBeansId(List<String> tags){
         TagBean tagBean;
-        HashSet<Integer> intersection = null;
+        HashSet<Integer> intersection = new HashSet<>();
+        boolean first = true;
         for(String tag:tags){
             if((tagBean = dataStorage.getTagBean(tag)) != null){
-                if(intersection == null){
-                    intersection = new HashSet<>();
+                if(first){
+                    first = false;
                     intersection.addAll(tagBean.getIdSet());
                 }else {
                     intersection.retainAll(tagBean.getIdSet());
