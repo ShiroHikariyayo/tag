@@ -13,7 +13,7 @@ public class FileBean {
     private String description;
     private HashSet<String> tagSet;
 
-    private transient ArrayList<String> oldPaths;
+    private transient ArrayList<String> notStoredPaths;
 
     public FileBean(){
         this(null,"");
@@ -39,7 +39,11 @@ public class FileBean {
     }
 
     public void setId(Integer id) {
-        this.id = id;
+        if(this.id == null || this.id.equals(id)){
+            this.id = id;
+        }else{
+            throw new RuntimeException("禁止手动修改id");
+        }
     }
 
     public String getPath() {
@@ -48,8 +52,8 @@ public class FileBean {
 
     public void setPath(String path) {
         if(path != null){
-            oldPaths = oldPaths == null ? new ArrayList<>() : oldPaths;
-            oldPaths.add(this.path);
+            notStoredPaths = notStoredPaths == null ? new ArrayList<>() : notStoredPaths;
+            notStoredPaths.add(this.path);
         }
         this.path = path;
     }
@@ -70,8 +74,8 @@ public class FileBean {
         this.tagSet = new HashSet<>(tagSet);
     }
 
-    public ArrayList<String> getOldPaths() {
-        return oldPaths;
+    public ArrayList<String> getNotStoredPaths() {
+        return notStoredPaths;
     }
 
     @Override
@@ -81,7 +85,7 @@ public class FileBean {
                 ", path='" + path + '\'' +
                 ", description='" + description + '\'' +
                 ", tagSet=" + tagSet +
-                ", oldPaths=" + oldPaths +
+                ", notStoredPaths=" + notStoredPaths +
                 '}';
     }
 }

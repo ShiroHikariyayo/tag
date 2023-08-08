@@ -83,10 +83,12 @@ public class TagFileTest {
         bean2.getTagSet().add("tag2");
         t.addTagToFile(bean);
         t.addTagToFile(bean2);
-        bean.setId(1);
+        //bean.setId(1);
         bean.setPath("E:\\test\\2");
+        bean.setPath("E:\\test\\3");
         t.updateFile(bean);
         System.out.println(t.hasFile("E:\\test\\1"));
+        System.out.println(t.hasFile("E:\\test\\2"));
     }
 
     @Test

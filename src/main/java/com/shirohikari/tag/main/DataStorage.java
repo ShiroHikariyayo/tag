@@ -146,13 +146,13 @@ public class DataStorage {
         String oldJson = fileRAF.readUTF();
         idFileBeanMap.replace(bean.getId(),bean);
         //可能会修改path
-        if(bean.getOldPaths() == null){
+        if(bean.getNotStoredPaths() == null){
             pathFileBeanMap.replace(bean.getPath(),bean);
         }else {
-            for(String oldPath:bean.getOldPaths()){
-                pathIdMap.remove(oldPath);
-                pathFileBeanMap.remove(oldPath);
-            }
+            String oldPath = bean.getNotStoredPaths().get(0);
+            bean.getNotStoredPaths().removeAll(bean.getNotStoredPaths());
+            pathIdMap.remove(oldPath);
+            pathFileBeanMap.remove(oldPath);
             pathIdMap.put(bean.getPath(),bean.getId());
             pathFileBeanMap.put(bean.getPath(),bean);
         }
@@ -333,9 +333,7 @@ public class DataStorage {
         Integer id = pathIdMap.get(bean.getPath());
         if(operate == Operate.UPDATE){
             if(id != null && !bean.getId().equals(id)){
-                throw new IOException("禁止修改id");
-            }else if(!bean.getId().equals(id)){
-                throw new IOException("禁止修改id和path");
+                throw new IOException("禁止修改id或修改path为已存在的path");
             }
         }else if(operate == Operate.REMOVE){
             if(!bean.getId().equals(id)){

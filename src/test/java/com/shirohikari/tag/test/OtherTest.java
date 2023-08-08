@@ -1,10 +1,8 @@
 package com.shirohikari.tag.test;
 
-import com.shirohikari.tag.main.DataStorage;
 import com.shirohikari.tag.main.TagFile;
 import com.shirohikari.tag.main.bean.FileBean;
 import org.junit.Test;
-import org.openjdk.jol.info.ClassLayout;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -93,13 +91,4 @@ public class OtherTest {
         System.out.println("time consume:"+(s2-s1));
     }
 
-    @Test
-    public void fileBeanSize(){
-        HashSet<String> l = new HashSet<>();
-        l.add("tag1");
-        l.add("tag2");
-        l.add("tag3");
-        FileBean f = new FileBean(0,"E:\\Pictures\\comic\\蘑菇的擬態日常\\第01话\\1.webp","只是一个普通的bean",l);
-        System.out.println(ClassLayout.parseInstance(f).toPrintable());
-    }
 }
