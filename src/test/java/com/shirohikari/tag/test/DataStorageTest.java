@@ -22,6 +22,9 @@ public class DataStorageTest {
         l.add("t1");
         l.add("t2");
         d.addFileRecord(new FileBean("E:\\test\\1","bean1",l));
+        d.addFileRecord(new FileBean("E:\\test\\2","bean2",l));
+        d.addFileRecord(new FileBean("E:\\test\\3","bean3",l));
+        d.addFileRecord(new FileBean("E:\\test\\4","bean4",l));
     }
 
 //    @Test
@@ -35,9 +38,9 @@ public class DataStorageTest {
         DataStorage d = DataStorage.create("E:\\test");
         HashSet<String> l = new HashSet<>();
         l.add("t1");
-        d.updateFileRecord(new FileBean(896,"E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\1.webp","更改后的数据1",l));
+        d.updateFileRecord(new FileBean(0,"E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\1.webp","更改后的数据1",l));
         l.add("t2");
-        d.updateFileRecord(new FileBean(898,"E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\2.webp","更改后的数据2",l));
+        d.updateFileRecord(new FileBean(1,"E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\2.webp","更改后的数据2",l));
     }
 
     @Test
@@ -45,6 +48,9 @@ public class DataStorageTest {
         DataStorage d = DataStorage.create("E:\\test");
         d.removeFileRecord(d.getFileBean(0));
         d.removeFileRecord(d.getFileBean(2));
+        HashSet<String> l = new HashSet<>();
+        l.add("t3");
+        d.addFileRecord(new FileBean("E:\\Pictures\\comic\\星灵感应\\1.第01话\\1.webp","关闭内存映射后增加的",l));
     }
 
     @Test
@@ -70,6 +76,7 @@ public class DataStorageTest {
         DataStorage d = DataStorage.create("E:\\test");
         d.removeTagRecord(new TagBean("tag2"));
         d.removeTagRecord(new TagBean("tag4"));
+        d.addTagRecord(new TagBean("tag6"));
     }
 
     @Test

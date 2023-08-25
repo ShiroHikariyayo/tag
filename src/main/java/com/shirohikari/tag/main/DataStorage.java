@@ -70,8 +70,8 @@ public class DataStorage {
         if(!canRead()){
             throw new IOException("版本不统一");
         }
-        tagRAF = new RandomAccessFile(tagTable,"rw");
-        fileRAF = new RandomAccessFile(fileTable,"rw");
+        tagRAF = new RandomAccessFile(tagTable,"rwd");
+        fileRAF = new RandomAccessFile(fileTable,"rwd");
         tags = new HashSet<>();
         idOffsetMap = new LinkedHashMap<>();
         pathIdMap = new HashMap<>();
@@ -135,8 +135,9 @@ public class DataStorage {
         bean.setId(nextId++);
         addToFileMaps(bean,fileEndOffset);
         String json = gson.toJson(bean);
-        fileEndOffset += json.getBytes().length + 2;
+        fileRAF.seek(fileEndOffset);
         fileRAF.writeUTF(json);
+        fileEndOffset += json.getBytes().length + 2;
     }
 
     public void updateFileRecord(FileBean bean) throws IOException {
@@ -180,8 +181,9 @@ public class DataStorage {
         tagOffsetMap.put(bean.getTag(),tagEndOffset);
         tagTagBeanMap.put(bean.getTag(),bean);
         String json = gson.toJson(bean);
-        tagEndOffset += json.getBytes().length + 2;
+        tagRAF.seek(tagEndOffset);
         tagRAF.writeUTF(json);
+        tagEndOffset += json.getBytes().length + 2;
     }
 
     public void updateTagRecord(TagBean bean) throws IOException {
@@ -281,7 +283,7 @@ public class DataStorage {
     private void insertOrRemoveFileRecord(String oldJson,String newJson,long offset) throws IOException {
         File tmp=File.createTempFile("file_tmp", null,dir);
         tmp.deleteOnExit();
-        FileUtil.saveAfterToTemp(fileRAF,fileRAF.getFilePointer(),tmp);
+        FileUtil.saveAfterToTemp(fileRAF,fileRAF.getFilePointer(),fileEndOffset,tmp);
         fileRAF.seek(offset);
         if(newJson != null){
             fileRAF.writeUTF(newJson);
@@ -289,15 +291,14 @@ public class DataStorage {
         }else {
             fileEndOffset = fileEndOffset - oldJson.getBytes().length - 2;
         }
-        FileUtil.readAndCover(fileRAF,fileRAF.getFilePointer(),tmp);
-        fileRAF.setLength(fileEndOffset);
+        FileUtil.readAndCover(fileRAF,fileRAF.getFilePointer(),fileEndOffset,tmp);
         tmp.delete();
     }
 
     private void insertOrRemoveTagRecord(String oldJson,String newJson,long offset) throws IOException {
         File tmp=File.createTempFile("tag_tmp", null,dir);
         tmp.deleteOnExit();
-        FileUtil.saveAfterToTemp(tagRAF,tagRAF.getFilePointer(),tmp);
+        FileUtil.saveAfterToTemp(tagRAF,tagRAF.getFilePointer(),tagEndOffset,tmp);
         tagRAF.seek(offset);
         if(newJson != null){
             tagRAF.writeUTF(newJson);
@@ -305,8 +306,8 @@ public class DataStorage {
         }else {
             tagEndOffset = tagEndOffset - oldJson.getBytes().length - 2;
         }
-        FileUtil.readAndCover(tagRAF,tagRAF.getFilePointer(),tmp);
         tagRAF.setLength(tagEndOffset);
+        FileUtil.readAndCover(tagRAF,tagRAF.getFilePointer(),tagEndOffset,tmp);
         tmp.delete();
     }
 

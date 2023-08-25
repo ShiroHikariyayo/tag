@@ -1,12 +1,20 @@
 package com.shirohikari.tag.util;
 
 import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
 /**
  * @author ShiroHikari
  */
 public class FileUtil {
+
+    private static Method invokeCleaner = null;
+    private static Object unsafe = null;
 
     /**
      * 循环创建文件夹
@@ -57,30 +65,31 @@ public class FileUtil {
         }
     }
 
-    public static void saveAfterToTemp(RandomAccessFile raf,long start,File file) throws IOException {
-        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-        raf.seek(start);
-        byte[] buffer=new byte[128];
-        //用于保存实际读取的字节数
-        int hasRead =0;
-        //使用循环方式读取插入点后的数据
-        while((hasRead=raf.read(buffer))>0){
-            //将读取的数据写入临时文件
-            out.write(buffer,0,hasRead);
-        }
-        out.flush();
-        out.close();
+    public static void saveAfterToTemp(RandomAccessFile raf,long start,long end,File file) throws IOException {
+        FileChannel saveChannel = new FileOutputStream(file).getChannel();
+        FileChannel rafChannel = raf.getChannel().position(0);
+        rafChannel.transferTo(start,end-start,saveChannel);
+        saveChannel.close();
     }
 
-    public static void readAndCover(RandomAccessFile raf,long start,File file) throws IOException {
-        BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
-        raf.seek(start);
-        byte[] buffer=new byte[128];
-        int hasRead =0;
-        while((hasRead=in.read(buffer))>0){
-            raf.write(buffer,0, hasRead);
+    public static void readAndCover(RandomAccessFile raf,long start,long end,File file) throws IOException {
+        raf.setLength(end);
+        FileChannel inChannel = new FileInputStream(file).getChannel();
+        FileChannel rafChannel = raf.getChannel();
+        MappedByteBuffer out = rafChannel.map(FileChannel.MapMode.READ_WRITE,start,end-start);
+        ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
+        while (true) {
+            int r = inChannel.read(buffer);
+            if (r == -1) {
+                break;
+            }
+            buffer.flip();
+            out.put(buffer);
+            buffer.clear();
         }
-        in.close();
+        out.force();
+        closeMappedByteBuffer(out);
+        inChannel.close();
     }
 
     /**
@@ -122,6 +131,22 @@ public class FileUtil {
         } finally {
             inputChannel.close();
             outputChannel.close();
+        }
+    }
+
+    private static void closeMappedByteBuffer(MappedByteBuffer buffer) throws IOException {
+        //关闭内存映射文件
+        try {
+            if(unsafe == null || invokeCleaner == null) {
+                Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+                Field unsafeField = unsafeClass.getDeclaredField("theUnsafe");
+                unsafeField.setAccessible(true);
+                unsafe = unsafeField.get(null);
+                invokeCleaner = unsafeClass.getMethod("invokeCleaner", ByteBuffer.class);
+            }
+            invokeCleaner.invoke(unsafe, buffer);
+        } catch (Exception e) {
+            throw new IOException("内存映射文件关闭失败",e);
         }
     }
 }
