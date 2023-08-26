@@ -22,6 +22,10 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 /**
  * @author ShiroHikari
@@ -33,35 +37,26 @@ public class FileUtil {
 
     /**
      * 循环创建文件夹
-     * @param file
+     * @param dir
      */
-    public static void makeDirectory(File file){
-        if(file.exists()) {
+    public static void makeDirectory(Path dir) throws IOException {
+        if(Files.exists(dir)) {
             return;
         }
-        String[] paths = file.getPath().split("\\\\");
-        StringBuilder curPath = new StringBuilder();
-        for(String dir:paths){
-            curPath.append(dir);
-            File curFile = new File(curPath.toString());
-            if (!curFile.exists()) {
-                curFile.mkdir();
-            }
-            curPath.append("\\");
-        }
+        Files.createDirectories(dir);
     }
 
-    public static void makeFile(File file) throws IOException {
-        if(file.exists()) {
+    public static void makeFile(Path file) throws IOException {
+        if(Files.exists(file)) {
             return;
         }
-        makeDirectory(new File(file.getParent()));
-        file.createNewFile();
+        makeDirectory(file.getParent());
+        Files.createFile(file);
     }
 
-    public static boolean isEmptyDirectory(File file){
-        if(file.exists() && file.isDirectory()){
-            return file.list().length == 0;
+    public static boolean isEmptyDirectory(Path file) throws IOException {
+        if(Files.exists(file) && Files.isDirectory(file)){
+            return Files.list(file).count() == 0;
         } else {
             return true;
         }
@@ -126,14 +121,16 @@ public class FileUtil {
     }
 
     public static void saveFile(byte[] data,String fileName,String savePath) throws IOException {
-        File saveDir = new File(savePath);
+        Path saveDir = Paths.get(savePath);
         makeDirectory(saveDir);
-        File file = new File(saveDir + File.separator + fileName);
-        FileOutputStream fos = new FileOutputStream(file);
-        fos.write(data);
-        if (fos != null) {
-            fos.close();
-        }
+        Path file = Paths.get(savePath,fileName);
+        FileChannel channel = FileChannel.open(file, StandardOpenOption.CREATE,StandardOpenOption.WRITE);
+        ByteBuffer buffer = ByteBuffer.allocate(data.length);
+        buffer.put(data);
+        buffer.flip();
+        channel.write(buffer);
+        channel.force(false);
+        channel.close();
     }
 
     public static void copyFile(File source, File dest) throws IOException {

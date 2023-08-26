@@ -100,4 +100,10 @@ public class DataStorageTest {
         DataStorage d = DataStorage.create("E:\\test");
         d.backup("test1");
     }
+
+    @Test
+    public void recover() throws IOException {
+        DataStorage d = DataStorage.create("E:\\test");
+        d.recover("test1");
+    }
 }

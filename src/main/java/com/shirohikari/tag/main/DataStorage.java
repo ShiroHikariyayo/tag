@@ -75,14 +75,14 @@ public class DataStorage {
         Path tabTable = Paths.get(dirPath,TAG_TABLE);
         Path fileTable = Paths.get(dirPath,FILE_TABLE);
         Path info = Paths.get(dirPath,INFO);
-        if(!FileUtil.isEmptyDirectory(dir.toFile()) && !Files.exists(tabTable)
+        if(!FileUtil.isEmptyDirectory(dir) && !Files.exists(tabTable)
                 && !Files.exists(fileTable) && !Files.exists(info) && !Files.exists(backup)){
             throw new IOException("文件夹不为空");
         }
-        FileUtil.makeDirectory(backup.toFile());
-        FileUtil.makeFile(tabTable.toFile());
-        FileUtil.makeFile(fileTable.toFile());
-        FileUtil.makeFile(info.toFile());
+        FileUtil.makeDirectory(backup);
+        FileUtil.makeFile(tabTable);
+        FileUtil.makeFile(fileTable);
+        FileUtil.makeFile(info);
         return new DataStorage(dir,backup,tabTable,fileTable,info);
     }
 
@@ -241,8 +241,8 @@ public class DataStorage {
         Files.createDirectory(saveFolder);
         Path backupTagTable = Paths.get(saveFolder.toString(),TAG_TABLE);
         Path backupFileTable = Paths.get(saveFolder.toString(),FILE_TABLE);
-        Files.createFile(tagTable);
-        Files.createFile(fileTable);
+        FileUtil.makeFile(tagTable);
+        FileUtil.makeFile(fileTable);
         FileUtil.copyFile(tagTable.toFile(),backupTagTable.toFile());
         FileUtil.copyFile(fileTable.toFile(),backupFileTable.toFile());
         infoBean.getBackups().add(name);
