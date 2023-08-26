@@ -20,7 +20,7 @@ import java.util.HashSet;
 
 /**
  * 代表标签的信息
- * @author ShiroHikari
+ * @author ShiroHikariyayo
  */
 public class TagBean {
     private String tag;

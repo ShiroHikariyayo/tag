@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 
 /**
  * 将标签和文件做关联,并不会对文件进行修改
- * @author ShiroHikari
+ * @author ShiroHikariyayo
  */
 public class TagFile {
     private final DataStorage dataStorage;

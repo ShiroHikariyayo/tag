@@ -26,7 +26,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
 /**
- * @author ShiroHikari
+ * @author ShiroHikariyayo
  */
 public class FileUtil {
 

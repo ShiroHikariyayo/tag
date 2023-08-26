@@ -21,7 +21,7 @@ import java.util.HashSet;
 
 /**
  * 代表需要添加标签的文件的信息,不应手动修改id
- * @author ShiroHikari
+ * @author ShiroHikariyayo
  */
 public class FileBean {
     private Integer id;

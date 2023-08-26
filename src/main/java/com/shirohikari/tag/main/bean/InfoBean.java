@@ -19,7 +19,7 @@ package com.shirohikari.tag.main.bean;
 import java.util.ArrayList;
 
 /**
- * @author ShiroHikari
+ * @author ShiroHikariyayo
  */
 public class InfoBean {
     private Integer tableVersion;

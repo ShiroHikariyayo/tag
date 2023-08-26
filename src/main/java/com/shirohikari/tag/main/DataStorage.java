@@ -32,7 +32,7 @@ import java.util.*;
 
 /**
  * 对tag_table和file_table文件进行直接操作
- * @author ShiroHikari
+ * @author ShiroHikariyayo
  */
 public class DataStorage {
     private static final int TABLE_VERSION = 1;
@@ -405,7 +405,7 @@ public class DataStorage {
         }
     }
 
-    private static class Operate{
+    private static final class Operate{
         private static final int ADD = 0;
         private static final int UPDATE = 1;
         private static final int REMOVE = 2;
