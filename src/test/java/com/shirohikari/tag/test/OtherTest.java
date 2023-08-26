@@ -18,6 +18,7 @@ package com.shirohikari.tag.test;
 
 import com.shirohikari.tag.main.TagFile;
 import com.shirohikari.tag.main.bean.FileBean;
+import com.shirohikari.tag.main.datastorage.LocalDataStorage;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -32,7 +33,7 @@ public class OtherTest {
 
     @Test
     public void getInitMemoryUsed() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         MemoryMXBean bean = ManagementFactory.getMemoryMXBean();
         MemoryUsage memoryUsage = bean.getHeapMemoryUsage();
         System.out.println(memoryUsage.getUsed() + "===" + memoryUsage.getUsed() / (1024*1024.0));
@@ -41,7 +42,7 @@ public class OtherTest {
     @Test
     public void genTable() throws IOException {
         long s1 = System.currentTimeMillis();
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         String[] tags = new String[100];
         for(int i=0;i<100;i++){
             tags[i] = "标签"+i;
@@ -70,7 +71,7 @@ public class OtherTest {
 
     @Test
     public void updateTimeUse() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         long s1 = System.currentTimeMillis();
         HashSet<String> l = new HashSet<>();
         l.add("tag5");
@@ -83,7 +84,7 @@ public class OtherTest {
 
     @Test
     public void removeTagTimeUse() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         System.out.println("标签数:"+t.getFileBeans("标签1").size());
         long s1 = System.currentTimeMillis();
         ArrayList<String> tags = new ArrayList<>();
@@ -95,7 +96,7 @@ public class OtherTest {
 
     @Test
     public void removeMultiTagTimeUse() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         List<FileBean> fileBeans = t.getFileBeans("标签1");
         fileBeans.addAll(t.getFileBeans("标签2"));
         System.out.println("标签数:"+fileBeans.size());

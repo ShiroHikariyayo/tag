@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.shirohikari.tag.main;
+package com.shirohikari.tag.main.datastorage;
 
 import com.google.gson.Gson;
 import com.shirohikari.tag.main.bean.FileBean;
@@ -31,10 +31,10 @@ import java.nio.file.Paths;
 import java.util.*;
 
 /**
- * 对tag_table和file_table文件进行直接操作
+ * 将标签和路径信息在本地进行存储，对tag_table和file_table文件进行直接操作
  * @author ShiroHikariyayo
  */
-public class DataStorage {
+public class LocalDataStorage implements IDataStorage {
     private static final int TABLE_VERSION = 1;
     private static final String TAG_TABLE = "tag_table";
     private static final String FILE_TABLE = "file_table";
@@ -60,7 +60,7 @@ public class DataStorage {
     private RandomAccessFile fileRAF;
     private Gson gson;
 
-    private DataStorage(Path dir,Path backup,Path tagTable,Path fileTable,Path info) throws IOException {
+    private LocalDataStorage(Path dir, Path backup, Path tagTable, Path fileTable, Path info) throws IOException {
         this.dir = dir;
         this.backup = backup;
         this.tagTable = tagTable;
@@ -69,7 +69,7 @@ public class DataStorage {
         init();
     }
 
-    public static DataStorage create(String dirPath) throws IOException {
+    public static LocalDataStorage create(String dirPath) throws IOException {
         Path dir = Paths.get(dirPath);
         Path backup = Paths.get(dirPath,BACKUP);
         Path tabTable = Paths.get(dirPath,TAG_TABLE);
@@ -83,7 +83,7 @@ public class DataStorage {
         FileUtil.makeFile(tabTable);
         FileUtil.makeFile(fileTable);
         FileUtil.makeFile(info);
-        return new DataStorage(dir,backup,tabTable,fileTable,info);
+        return new LocalDataStorage(dir,backup,tabTable,fileTable,info);
     }
 
     private void init() throws IOException {
@@ -123,34 +123,42 @@ public class DataStorage {
         tagEndOffset = tagRAF.length();
     }
 
+    @Override
     public boolean hasFile(int id){
         return idFileBeanMap.containsKey(id);
     }
 
+    @Override
     public boolean hasFile(String path){
         return pathFileBeanMap.containsKey(path);
     }
 
+    @Override
     public boolean hasTag(String tag){
         return tags.contains(tag);
     }
 
+    @Override
     public Set<String> getAllTags(){
         return Collections.unmodifiableSet(tags);
     }
 
+    @Override
     public FileBean getFileBean(int id){
         return idFileBeanMap.get(id);
     }
 
+    @Override
     public FileBean getFileBean(String path) {
         return pathFileBeanMap.get(path);
     }
 
+    @Override
     public TagBean getTagBean(String tag){
         return tagTagBeanMap.get(tag);
     }
 
+    @Override
     public void addFileRecord(FileBean bean) throws IOException {
         checkFileBean(bean,Operate.ADD);
         bean.setId(nextId++);
@@ -161,6 +169,7 @@ public class DataStorage {
         fileEndOffset += json.getBytes().length + 2;
     }
 
+    @Override
     public void updateFileRecord(FileBean bean) throws IOException {
         checkFileBean(bean,Operate.UPDATE);
         long offset = idOffsetMap.get(bean.getId());
@@ -183,6 +192,7 @@ public class DataStorage {
         insertOrRemoveFileRecord(oldJson,newJson,offset);
     }
 
+    @Override
     public void removeFileRecord(FileBean bean) throws IOException {
         checkFileBean(bean,Operate.REMOVE);
         long offset = idOffsetMap.get(bean.getId());
@@ -196,6 +206,7 @@ public class DataStorage {
         insertOrRemoveFileRecord(oldJson,null,offset);
     }
 
+    @Override
     public void addTagRecord(TagBean bean) throws IOException {
         checkTagBean(bean,Operate.ADD);
         tags.add(bean.getTag());
@@ -207,6 +218,7 @@ public class DataStorage {
         tagEndOffset += json.getBytes().length + 2;
     }
 
+    @Override
     public void updateTagRecord(TagBean bean) throws IOException {
         checkTagBean(bean,Operate.UPDATE);
         long offset = tagOffsetMap.get(bean.getTag());
@@ -218,6 +230,7 @@ public class DataStorage {
         insertOrRemoveTagRecord(oldJson,newJson,offset);
     }
 
+    @Override
     public void removeTagRecord(TagBean bean) throws IOException {
         checkTagBean(bean,Operate.REMOVE);
         long offset = tagOffsetMap.get(bean.getTag());
@@ -230,6 +243,7 @@ public class DataStorage {
         insertOrRemoveTagRecord(oldJson,null,offset);
     }
 
+    @Override
     public void backup(String name) throws IOException {
         byte[] bytes = Files.readAllBytes(info);
         InfoBean infoBean = gson.fromJson(new String(bytes),InfoBean.class);
@@ -248,6 +262,7 @@ public class DataStorage {
         FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent().toString());
     }
 
+    @Override
     public void recover(String name) throws IOException {
         byte[] bytes = Files.readAllBytes(info);
         InfoBean infoBean = gson.fromJson(new String(bytes),InfoBean.class);
@@ -264,6 +279,7 @@ public class DataStorage {
         init();
     }
 
+    @Override
     public void removeBackup(String name) throws IOException {
         byte[] bytes = Files.readAllBytes(info);
         InfoBean infoBean = gson.fromJson(new String(bytes),InfoBean.class);

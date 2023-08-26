@@ -20,7 +20,7 @@ package com.shirohikari.tag.test;
 
 import com.google.gson.Gson;
 import com.shirohikari.tag.main.bean.FileBean;
-import com.shirohikari.tag.main.interfaces.impl.TextFileOperator;
+import com.shirohikari.tag.main.fileoperator.TextFileOperator;
 import org.junit.Test;
 
 import java.io.IOException;

@@ -18,6 +18,7 @@ package com.shirohikari.tag.main;
 
 import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.main.bean.TagBean;
+import com.shirohikari.tag.main.datastorage.IDataStorage;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -33,14 +34,14 @@ import java.util.stream.Collectors;
  * @author ShiroHikariyayo
  */
 public class TagFile {
-    private final DataStorage dataStorage;
+    private final IDataStorage dataStorage;
 
     /**
-     * @param savePath 持久化文件储存位置
+     * @param dataStorage 持久化文件储存位置
      * @throws IOException
      */
-    public TagFile(String savePath) throws IOException {
-        dataStorage = DataStorage.create(savePath);
+    public TagFile(IDataStorage dataStorage) throws IOException {
+        this.dataStorage = dataStorage;
     }
 
     /**

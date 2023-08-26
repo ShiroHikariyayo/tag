@@ -19,6 +19,7 @@ package com.shirohikari.tag.test;
 import com.shirohikari.tag.main.TagFile;
 import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.main.bean.TagBean;
+import com.shirohikari.tag.main.datastorage.LocalDataStorage;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -31,7 +32,7 @@ import java.util.Set;
 public class TagFileTest {
     @Test
     public void addTagToFile() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         HashSet<String> l = new HashSet<>();
         l.add("t1");
         l.add("t2");
@@ -46,7 +47,7 @@ public class TagFileTest {
 
     @Test
     public void addTagToFile2() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         HashSet<String> l = new HashSet<>();
         l.add("t1");
         l.add("t2");
@@ -56,7 +57,7 @@ public class TagFileTest {
 
     @Test
     public void addTagToFile3() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         ArrayList<TagBean> l = new ArrayList<>();
         l.add(new TagBean("t1"));
         TagBean b = new TagBean("t2");
@@ -80,7 +81,7 @@ public class TagFileTest {
 
     @Test
     public void updateFile() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         t.addTagToFile("E:\\test\\1","tag1");
         t.addTagToFile("E:\\test\\2","tag2");
         FileBean fileBean = t.getFileBean(0);
@@ -92,7 +93,7 @@ public class TagFileTest {
 
     @Test
     public void updateFile2() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         FileBean bean = new FileBean("E:\\test\\1","this is a bean1");
         FileBean bean2 = new FileBean("E:\\test\\2","this is a bean2");
         bean.getTagSet().add("tag1");
@@ -109,7 +110,7 @@ public class TagFileTest {
 
     @Test
     public void deleteTagToFile() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         t.addTagToFile("E:\\test\\1","tag1");
         t.addTagToFile("E:\\test\\1","tag2");
         t.addTagToFile("E:\\test\\2","tag2");
@@ -122,7 +123,7 @@ public class TagFileTest {
 
     @Test
     public void deleteTagToFile2() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         t.addTagToFile("E:\\test\\1","tag1");
         t.addTagToFile("E:\\test\\1","tag2");
         t.addTagToFile("E:\\test\\1","tag3");
@@ -135,7 +136,7 @@ public class TagFileTest {
     @Test
     public void getFileBeans() throws IOException {
         long s1 = System.currentTimeMillis();
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         ArrayList<String> l = new ArrayList<>();
         l.add("标签1");
         l.add("标签2");
@@ -151,7 +152,7 @@ public class TagFileTest {
 
     @Test
     public void removeTag() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         HashSet<String> set = new HashSet<>();
         set.add("t1");
         t.addTagToFile(new FileBean("E:\\test\\1","desc1",set));
@@ -164,7 +165,7 @@ public class TagFileTest {
 
     @Test
     public void removeTag2() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         HashSet<String> set = new HashSet<>();
         set.add("t1");
         t.addTagToFile(new FileBean("E:\\test\\1","desc1",set));
@@ -180,7 +181,7 @@ public class TagFileTest {
 
     @Test
     public void addTagInDirectory() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
 //        t.addTagInDirectory(new File("E:\\test"),new TagBean("tag1"),true);
 //        t.addTagInDirectory(new File("E:\\test"),new TagBean("tag1"),false);
 //        t.addTagInDirectory(new File("E:\\test"),new TagBean("tag2"),false);
@@ -194,7 +195,7 @@ public class TagFileTest {
 
     @Test
     public void backup() throws IOException {
-        TagFile t = new TagFile("E:\\test");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         t.backup("备份1");
         System.out.println("开始除所有标签");
         ArrayList<String> tags = new ArrayList<>();

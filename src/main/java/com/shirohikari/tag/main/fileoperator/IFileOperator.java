@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.shirohikari.tag.main.interfaces;
+package com.shirohikari.tag.main.fileoperator;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -24,7 +24,7 @@ import java.nio.channels.FileChannel;
  * 并进行存储和读取，一条记录应在文件中连续
  * @author ShiroHikariyayo
  */
-public interface FileOperator {
+public interface IFileOperator {
 
     /**
      * 读取下一个数据

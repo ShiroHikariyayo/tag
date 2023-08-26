@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package com.shirohikari.tag.main.interfaces.impl;
-
-import com.shirohikari.tag.main.interfaces.FileOperator;
+package com.shirohikari.tag.main.fileoperator;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -27,7 +25,7 @@ import java.nio.file.StandardOpenOption;
 /**
  * @author ShiroHikariyayo
  */
-public class TextFileOperator implements FileOperator {
+public class TextFileOperator implements IFileOperator {
 
     private static final int BUFFER_LENGTH = 1024;
 

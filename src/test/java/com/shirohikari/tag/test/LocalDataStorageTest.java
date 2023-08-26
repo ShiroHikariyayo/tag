@@ -16,7 +16,7 @@
 
 package com.shirohikari.tag.test;
 
-import com.shirohikari.tag.main.DataStorage;
+import com.shirohikari.tag.main.datastorage.LocalDataStorage;
 import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.main.bean.TagBean;
 import org.junit.Test;
@@ -24,16 +24,16 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.HashSet;
 
-public class DataStorageTest {
+public class LocalDataStorageTest {
 
     @Test
     public void create() throws IOException {
-        DataStorage.create("E:\\test");
+        LocalDataStorage.create("E:\\test");
     }
 
     @Test
     public void addFileRecord() throws IOException {
-        DataStorage d = DataStorage.create("E:\\test");
+        LocalDataStorage d = LocalDataStorage.create("E:\\test");
         HashSet<String> l = new HashSet<>();
         l.add("t1");
         l.add("t2");
@@ -51,7 +51,7 @@ public class DataStorageTest {
 
     @Test
     public void updateFileRecord() throws IOException{
-        DataStorage d = DataStorage.create("E:\\test");
+        LocalDataStorage d = LocalDataStorage.create("E:\\test");
         HashSet<String> l = new HashSet<>();
         l.add("t1");
         d.updateFileRecord(new FileBean(0,"E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\1.webp","更改后的数据1",l));
@@ -61,7 +61,7 @@ public class DataStorageTest {
 
     @Test
     public void removeFileRecord() throws IOException{
-        DataStorage d = DataStorage.create("E:\\test");
+        LocalDataStorage d = LocalDataStorage.create("E:\\test");
         d.removeFileRecord(d.getFileBean(0));
         d.removeFileRecord(d.getFileBean(2));
         HashSet<String> l = new HashSet<>();
@@ -71,7 +71,7 @@ public class DataStorageTest {
 
     @Test
     public void addTagRecord() throws IOException {
-        DataStorage d = DataStorage.create("E:\\test");
+        LocalDataStorage d = LocalDataStorage.create("E:\\test");
         for (int i = 1;i<=5;i++){
             d.addTagRecord(new TagBean("tag"+i));
         }
@@ -79,7 +79,7 @@ public class DataStorageTest {
 
     @Test
     public void updateTagRecord() throws IOException {
-        DataStorage d = DataStorage.create("E:\\test");
+        LocalDataStorage d = LocalDataStorage.create("E:\\test");
         HashSet<Integer> l = new HashSet<>();
         l.add(1);
         d.updateTagRecord(new TagBean("tag1",l));
@@ -89,7 +89,7 @@ public class DataStorageTest {
 
     @Test
     public void removeTagRecord() throws IOException {
-        DataStorage d = DataStorage.create("E:\\test");
+        LocalDataStorage d = LocalDataStorage.create("E:\\test");
         d.removeTagRecord(new TagBean("tag2"));
         d.removeTagRecord(new TagBean("tag4"));
         d.addTagRecord(new TagBean("tag6"));
@@ -97,19 +97,19 @@ public class DataStorageTest {
 
     @Test
     public void backup() throws IOException {
-        DataStorage d = DataStorage.create("E:\\test");
+        LocalDataStorage d = LocalDataStorage.create("E:\\test");
         d.backup("test1");
     }
 
     @Test
     public void recover() throws IOException {
-        DataStorage d = DataStorage.create("E:\\test");
+        LocalDataStorage d = LocalDataStorage.create("E:\\test");
         d.recover("test1");
     }
 
     @Test
     public void removeBackup() throws IOException {
-        DataStorage d = DataStorage.create("E:\\test");
+        LocalDataStorage d = LocalDataStorage.create("E:\\test");
         d.removeBackup("test1");
     }
 }
