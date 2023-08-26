@@ -136,6 +136,11 @@ public class TextFileOperator implements IFileOperator {
         return channel.size();
     }
 
+    @Override
+    public String version() {
+        return "TextFileOperator-1";
+    }
+
     private void writePart() throws IOException {
         buffer.flip();
         channel.write(buffer);

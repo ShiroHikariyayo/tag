@@ -22,24 +22,34 @@ import java.util.ArrayList;
  * @author ShiroHikariyayo
  */
 public class InfoBean {
-    private Integer tableVersion;
+    private String tagVersion;
+    private String fileVersion;
     private ArrayList<String> backups;
 
     public InfoBean() {
-        this(null,new ArrayList<>());
+        this(null,null,new ArrayList<>());
     }
 
-    public InfoBean(Integer tableVersion, ArrayList<String> backups) {
-        this.tableVersion = tableVersion;
+    public InfoBean(String tagVersion,String fileVersion, ArrayList<String> backups) {
+        this.tagVersion = tagVersion;
+        this.fileVersion = fileVersion;
         this.backups = new ArrayList<>(backups);
     }
 
-    public Integer getTableVersion() {
-        return tableVersion;
+    public String getTagVersion() {
+        return tagVersion;
     }
 
-    public void setTableVersion(Integer tableVersion) {
-        this.tableVersion = tableVersion;
+    public void setTagVersion(String tagVersion) {
+        this.tagVersion = tagVersion;
+    }
+
+    public String getFileVersion() {
+        return fileVersion;
+    }
+
+    public void setFileVersion(String fileVersion) {
+        this.fileVersion = fileVersion;
     }
 
     public ArrayList<String> getBackups() {

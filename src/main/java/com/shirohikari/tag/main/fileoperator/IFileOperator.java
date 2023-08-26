@@ -43,12 +43,14 @@ public interface IFileOperator {
     /**
      * 返回当前位置
      * @return 当前位置
+     * @throws IOException
      */
     long position() throws IOException;
 
     /**
      * 移动到指定位置读取
      * @param position 读取位置
+     * @throws IOException
      */
     void position(long position) throws IOException;
 
@@ -61,6 +63,7 @@ public interface IFileOperator {
     /**
      * 文件对应的FileChannel
      * @return 文件对应的FileChannel
+     * @throws IOException
      */
     FileChannel getFileChannel() throws IOException;
 
@@ -68,12 +71,20 @@ public interface IFileOperator {
      * 文件对应的FileChannel
      * @param position FileChannel的读取位置
      * @return 文件对应的FileChannel
+     * @throws IOException
      */
     FileChannel getFileChannel(long position) throws IOException;
 
     /**
      * 文件最大位置
      * @return
+     * @throws IOException
      */
     long size() throws IOException;
+
+    /**
+     * 版本号
+     * @return
+     */
+    String version();
 }

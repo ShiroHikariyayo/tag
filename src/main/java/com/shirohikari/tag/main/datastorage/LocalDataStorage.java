@@ -22,6 +22,8 @@ import com.google.gson.Gson;
 import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.main.bean.InfoBean;
 import com.shirohikari.tag.main.bean.TagBean;
+import com.shirohikari.tag.main.fileoperator.IFileOperator;
+import com.shirohikari.tag.main.fileoperator.TextFileOperator;
 import com.shirohikari.tag.util.FileUtil;
 
 import java.io.*;
@@ -35,7 +37,7 @@ import java.util.*;
  * @author ShiroHikariyayo
  */
 public class LocalDataStorage implements IDataStorage {
-    private static final int TABLE_VERSION = 1;
+
     private static final String TAG_TABLE = "tag_table";
     private static final String FILE_TABLE = "file_table";
     private static final String INFO = "info";
@@ -56,34 +58,42 @@ public class LocalDataStorage implements IDataStorage {
     private HashMap<String,FileBean> pathFileBeanMap;
     private HashMap<String, Long> tagOffsetMap;
     private HashMap<String, TagBean> tagTagBeanMap;
+    private IFileOperator tagOperator;
+    private IFileOperator fileOperator;
     private RandomAccessFile tagRAF;
     private RandomAccessFile fileRAF;
     private Gson gson;
 
-    private LocalDataStorage(Path dir, Path backup, Path tagTable, Path fileTable, Path info) throws IOException {
+    private LocalDataStorage(Path dir, Path backup, Path tagTable, Path fileTable, Path info,IFileOperator tagOperator,IFileOperator fileOperator) throws IOException {
         this.dir = dir;
         this.backup = backup;
         this.tagTable = tagTable;
         this.fileTable = fileTable;
         this.info = info;
+        this.tagOperator = tagOperator == null ? new TextFileOperator(tagTable) : tagOperator;
+        this.fileOperator = fileOperator == null ? new TextFileOperator(fileTable) : fileOperator;
         init();
     }
 
     public static LocalDataStorage create(String dirPath) throws IOException {
+        return create(dirPath,null,null);
+    }
+
+    public static LocalDataStorage create(String dirPath,IFileOperator tagOperator,IFileOperator fileOperator) throws IOException {
         Path dir = Paths.get(dirPath);
         Path backup = Paths.get(dirPath,BACKUP);
-        Path tabTable = Paths.get(dirPath,TAG_TABLE);
+        Path tagTable = Paths.get(dirPath,TAG_TABLE);
         Path fileTable = Paths.get(dirPath,FILE_TABLE);
         Path info = Paths.get(dirPath,INFO);
-        if(!FileUtil.isEmptyDirectory(dir) && !Files.exists(tabTable)
+        if(!FileUtil.isEmptyDirectory(dir) && !Files.exists(tagTable)
                 && !Files.exists(fileTable) && !Files.exists(info) && !Files.exists(backup)){
             throw new IOException("文件夹不为空");
         }
         FileUtil.makeDirectory(backup);
-        FileUtil.makeFile(tabTable);
+        FileUtil.makeFile(tagTable);
         FileUtil.makeFile(fileTable);
         FileUtil.makeFile(info);
-        return new LocalDataStorage(dir,backup,tabTable,fileTable,info);
+        return new LocalDataStorage(dir,backup,tagTable,fileTable,info,tagOperator,fileOperator);
     }
 
     private void init() throws IOException {
@@ -408,12 +418,13 @@ public class LocalDataStorage implements IDataStorage {
         String json = new String(bytes);
         if("".equals(json)){
             InfoBean infoBean = new InfoBean();
-            infoBean.setTableVersion(TABLE_VERSION);
+            infoBean.setTagVersion(tagOperator.version());
+            infoBean.setFileVersion(fileOperator.version());
             FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent().toString());
             return true;
         }else {
             InfoBean infoBean = gson.fromJson(json,InfoBean.class);
-            if(infoBean.getTableVersion().equals(TABLE_VERSION)){
+            if(tagOperator.version().equals(infoBean.getTagVersion()) && fileOperator.version().equals(infoBean.getFileVersion())){
                 return true;
             }else {
                 return false;
