@@ -1,11 +1,31 @@
+/*
+ * Copyright (C) 2023 ShiroHikariyayo
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.shirohikari.tag.main;
 
 import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.main.bean.TagBean;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -327,42 +347,65 @@ public class TagFile {
      * @param addToDir 是否给文件夹也添加标签
      */
     public void addTagInDirectory(String path,String tag,boolean addToDir){
-        addTagInDirectory(new File(path),new TagBean(tag),addToDir);
+        addTagInDirectory(Paths.get(path),new TagBean(tag),addToDir);
     }
 
     /**
-     * 给文件夹内的所有文件添加tag
+     * 给文件夹内的所有文件添加标签
      * @param dir
      * @param tagBean
      * @param addToDir 是否给文件夹也添加标签
      */
-    public void addTagInDirectory(File dir,TagBean tagBean,boolean addToDir){
-        if(!dir.exists()){
+    public void addTagInDirectory(Path dir,TagBean tagBean,boolean addToDir){
+        if(tagBean == null || "".equals(tagBean.getTag())){
+            throw new RuntimeException("标签不应为空字符串");
+        }
+        ArrayList<String> tags = new ArrayList<>();
+        tags.add(tagBean.getTag());
+        addTagsInDirectory(dir,tags,addToDir);
+    }
+
+    /**
+     * 给文件夹内的所有文件添加给定的所有标签
+     * @param path
+     * @param tags
+     * @param addToDir 是否给文件夹也添加标签
+     */
+    public void addTagsInDirectory(Path path,List<String> tags,boolean addToDir){
+        if(!Files.exists(path)){
             return;
         }
-        if(!dir.isDirectory()){
+        if(!Files.isDirectory(path)){
             throw new RuntimeException("提供的路径并非文件夹");
         }
-        if(tagBean == null || tagBean.getTag() == null || "".equals(tagBean.getTag())){
+        if(tags == null || tags.isEmpty()){
             throw new RuntimeException("请指定tag");
         }
-        for(File file: Objects.requireNonNull(dir.listFiles())){
-            FileBean fileBean = dataStorage.getFileBean(file.getPath());
-            if(file.isDirectory()){
-                addTagInDirectory(file,tagBean,addToDir);
-            }
-            if((file.isDirectory() && addToDir) || file.isFile()){
-                if(fileBean == null){
-                    fileBean = new FileBean(file.getPath(),"");
-                    fileBean.getTagSet().add(tagBean.getTag());
-                    addTagToFile(fileBean);
-                }else{
-                    fileBean.getTagSet().add(tagBean.getTag());
-                    updateFile(fileBean);
+        try {
+            Files.walkFileTree(path, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    whenVisitFile(file,tags);
+                    return FileVisitResult.CONTINUE;
                 }
-            }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    if(exc == null){
+                        if (addToDir && !dir.equals(path)){
+                            whenVisitFile(dir,tags);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }else {
+                        throw exc;
+                    }
+                }
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
+
 
     /**
      * 更新对fileBean对象进行的修改
@@ -476,7 +519,7 @@ public class TagFile {
      * @param tag
      * @return
      */
-    public ArrayList<FileBean> getFileBeans(String tag){
+    public List<FileBean> getFileBeans(String tag){
         ArrayList<FileBean> beans = new ArrayList<>();
         TagBean tagBean;
         if((tagBean = dataStorage.getTagBean(tag)) != null){
@@ -537,6 +580,18 @@ public class TagFile {
             return true;
         }else {
             return false;
+        }
+    }
+
+    private void whenVisitFile(Path file,List<String> tags) throws IOException {
+        String path = file.toString();
+        FileBean fileBean = dataStorage.getFileBean(path);
+        if(fileBean == null){
+            fileBean = new FileBean(path,"",new HashSet<>(tags));
+            addTagToFile(fileBean);
+        }else{
+            fileBean.getTagSet().addAll(tags);
+            updateFile(fileBean);
         }
     }
 }
