@@ -106,4 +106,10 @@ public class DataStorageTest {
         DataStorage d = DataStorage.create("E:\\test");
         d.recover("test1");
     }
+
+    @Test
+    public void removeBackup() throws IOException {
+        DataStorage d = DataStorage.create("E:\\test");
+        d.removeBackup("test1");
+    }
 }

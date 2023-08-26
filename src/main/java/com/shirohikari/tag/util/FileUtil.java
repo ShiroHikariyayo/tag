@@ -22,10 +22,8 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 
 /**
  * @author ShiroHikari
@@ -62,20 +60,25 @@ public class FileUtil {
         }
     }
 
-    public static void remove(File dir){
-        if(dir != null && dir.exists()){
-            for(File file:dir.listFiles()){
-                if(file.isDirectory()){
-                    remove(file);
-                }else {
-                    file.delete();
+    public static void remove(Path dir) throws IOException {
+        if(dir != null && Files.exists(dir)){
+            Files.walkFileTree(dir,new SimpleFileVisitor<>(){
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
                 }
-            }
-            dir.delete();
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
         }
     }
 
-    public static void saveAfterToTemp(RandomAccessFile raf,long start,long end,File file) throws IOException {
+    public static void saveAfterToTemp(RandomAccessFile raf, long start, long end, File file) throws IOException {
         FileChannel saveChannel = new FileOutputStream(file).getChannel();
         FileChannel rafChannel = raf.getChannel().position(0);
         rafChannel.transferTo(start,end-start,saveChannel);
@@ -102,29 +105,11 @@ public class FileUtil {
         inChannel.close();
     }
 
-    /**
-     * 从输入流中获取字节数组
-     *
-     * @param inputStream
-     * @return
-     * @throws IOException
-     */
-    public static byte[] readInputStream(InputStream inputStream) throws IOException {
-        byte[] buffer = new byte[4096];
-        int len = 0;
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        while ((len = inputStream.read(buffer)) != -1) {
-            bos.write(buffer, 0, len);
-        }
-        bos.close();
-        return bos.toByteArray();
-    }
-
     public static void saveFile(byte[] data,String fileName,String savePath) throws IOException {
         Path saveDir = Paths.get(savePath);
         makeDirectory(saveDir);
         Path file = Paths.get(savePath,fileName);
-        FileChannel channel = FileChannel.open(file, StandardOpenOption.CREATE,StandardOpenOption.WRITE);
+        FileChannel channel = FileChannel.open(file, StandardOpenOption.CREATE,StandardOpenOption.WRITE,StandardOpenOption.TRUNCATE_EXISTING);
         ByteBuffer buffer = ByteBuffer.allocate(data.length);
         buffer.put(data);
         buffer.flip();
@@ -133,17 +118,12 @@ public class FileUtil {
         channel.close();
     }
 
-    public static void copyFile(File source, File dest) throws IOException {
-        FileChannel inputChannel = null;
-        FileChannel outputChannel = null;
-        try {
-            inputChannel = new FileInputStream(source).getChannel();
-            outputChannel = new FileOutputStream(dest).getChannel();
-            outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
-        } finally {
-            inputChannel.close();
-            outputChannel.close();
-        }
+    public static void copyFile(Path source, Path dest) throws IOException {
+        FileChannel inputChannel = FileChannel.open(source,StandardOpenOption.READ,StandardOpenOption.CREATE,StandardOpenOption.TRUNCATE_EXISTING);
+        FileChannel outputChannel = FileChannel.open(dest,StandardOpenOption.WRITE,StandardOpenOption.CREATE,StandardOpenOption.TRUNCATE_EXISTING);
+        outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
+        inputChannel.close();
+        outputChannel.close();
     }
 
     private static void closeMappedByteBuffer(MappedByteBuffer buffer) throws IOException {

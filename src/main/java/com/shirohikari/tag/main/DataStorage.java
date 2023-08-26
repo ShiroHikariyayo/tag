@@ -231,26 +231,25 @@ public class DataStorage {
     }
 
     public void backup(String name) throws IOException {
-        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info.toFile())));
+        byte[] bytes = Files.readAllBytes(info);
         InfoBean infoBean = gson.fromJson(new String(bytes),InfoBean.class);
         if(infoBean.getBackups().contains(name)){
             throw new IOException("备份名称已被占用");
         }
-        //File saveFolder = new File(backup.toFile(),name);
         Path saveFolder = Paths.get(backup.toString(),name);
-        Files.createDirectory(saveFolder);
+        FileUtil.makeDirectory(saveFolder);
         Path backupTagTable = Paths.get(saveFolder.toString(),TAG_TABLE);
         Path backupFileTable = Paths.get(saveFolder.toString(),FILE_TABLE);
         FileUtil.makeFile(tagTable);
         FileUtil.makeFile(fileTable);
-        FileUtil.copyFile(tagTable.toFile(),backupTagTable.toFile());
-        FileUtil.copyFile(fileTable.toFile(),backupFileTable.toFile());
+        FileUtil.copyFile(tagTable,backupTagTable);
+        FileUtil.copyFile(fileTable,backupFileTable);
         infoBean.getBackups().add(name);
         FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent().toString());
     }
 
     public void recover(String name) throws IOException {
-        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info.toFile())));
+        byte[] bytes = Files.readAllBytes(info);
         InfoBean infoBean = gson.fromJson(new String(bytes),InfoBean.class);
         if(!infoBean.getBackups().contains(name)){
             throw new IOException("未找到该备份");
@@ -260,15 +259,15 @@ public class DataStorage {
         Path folder = Paths.get(backup.toString(),name);
         Path backupTagTable = Paths.get(folder.toString(),TAG_TABLE);
         Path backupFileTable = Paths.get(folder.toString(),FILE_TABLE);
-        FileUtil.copyFile(backupTagTable.toFile(),tagTable.toFile());
-        FileUtil.copyFile(backupFileTable.toFile(),fileTable.toFile());
+        FileUtil.copyFile(backupTagTable,tagTable);
+        FileUtil.copyFile(backupFileTable,fileTable);
         init();
     }
 
     public void removeBackup(String name) throws IOException {
-        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info.toFile())));
+        byte[] bytes = Files.readAllBytes(info);
         InfoBean infoBean = gson.fromJson(new String(bytes),InfoBean.class);
-        FileUtil.remove(new File(backup.toFile(),name));
+        FileUtil.remove(Paths.get(backup.toString(),name));
         infoBean.getBackups().remove(name);
         FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent().toString());
     }
@@ -391,7 +390,7 @@ public class DataStorage {
     }
 
     private boolean canRead() throws IOException {
-        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info.toFile())));
+        byte[] bytes = Files.readAllBytes(info);
         String json = new String(bytes);
         if("".equals(json)){
             InfoBean infoBean = new InfoBean();
