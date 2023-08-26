@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2023 ShiroHikariyayo
+ * Copyright 2008 Google Inc.
+ * used google/gson,see https://github.com/google/gson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +25,9 @@ import com.shirohikari.tag.main.bean.TagBean;
 import com.shirohikari.tag.util.FileUtil;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -39,11 +44,11 @@ public class DataStorage {
     private int nextId;
     private long tagEndOffset;
     private long fileEndOffset;
-    private final File dir;
-    private final File backup;
-    private final File tagTable;
-    private final File fileTable;
-    private final File info;
+    private final Path dir;
+    private final Path backup;
+    private final Path tagTable;
+    private final Path fileTable;
+    private final Path info;
     private HashSet<String> tags;
     private LinkedHashMap<Integer,Long> idOffsetMap;
     private HashMap<Integer,FileBean> idFileBeanMap;
@@ -55,7 +60,7 @@ public class DataStorage {
     private RandomAccessFile fileRAF;
     private Gson gson;
 
-    private DataStorage(File dir,File backup,File tagTable,File fileTable,File info) throws IOException {
+    private DataStorage(Path dir,Path backup,Path tagTable,Path fileTable,Path info) throws IOException {
         this.dir = dir;
         this.backup = backup;
         this.tagTable = tagTable;
@@ -65,19 +70,19 @@ public class DataStorage {
     }
 
     public static DataStorage create(String dirPath) throws IOException {
-        File dir = new File(dirPath);
-        File backup = new File(dirPath,BACKUP);
-        File tabTable = new File(dirPath,TAG_TABLE);
-        File fileTable = new File(dirPath,FILE_TABLE);
-        File info = new File(dirPath,INFO);
-        if(!FileUtil.isEmptyDirectory(dir) && !tabTable.exists()
-                && !fileTable.exists() && !info.exists() && !backup.exists()){
+        Path dir = Paths.get(dirPath);
+        Path backup = Paths.get(dirPath,BACKUP);
+        Path tabTable = Paths.get(dirPath,TAG_TABLE);
+        Path fileTable = Paths.get(dirPath,FILE_TABLE);
+        Path info = Paths.get(dirPath,INFO);
+        if(!FileUtil.isEmptyDirectory(dir.toFile()) && !Files.exists(tabTable)
+                && !Files.exists(fileTable) && !Files.exists(info) && !Files.exists(backup)){
             throw new IOException("文件夹不为空");
         }
-        FileUtil.makeDirectory(backup);
-        FileUtil.makeFile(tabTable);
-        FileUtil.makeFile(fileTable);
-        FileUtil.makeFile(info);
+        FileUtil.makeDirectory(backup.toFile());
+        FileUtil.makeFile(tabTable.toFile());
+        FileUtil.makeFile(fileTable.toFile());
+        FileUtil.makeFile(info.toFile());
         return new DataStorage(dir,backup,tabTable,fileTable,info);
     }
 
@@ -86,8 +91,8 @@ public class DataStorage {
         if(!canRead()){
             throw new IOException("版本不统一");
         }
-        tagRAF = new RandomAccessFile(tagTable,"rwd");
-        fileRAF = new RandomAccessFile(fileTable,"rwd");
+        tagRAF = new RandomAccessFile(tagTable.toFile(),"rwd");
+        fileRAF = new RandomAccessFile(fileTable.toFile(),"rwd");
         tags = new HashSet<>();
         idOffsetMap = new LinkedHashMap<>();
         pathIdMap = new HashMap<>();
@@ -226,45 +231,46 @@ public class DataStorage {
     }
 
     public void backup(String name) throws IOException {
-        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info)));
+        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info.toFile())));
         InfoBean infoBean = gson.fromJson(new String(bytes),InfoBean.class);
         if(infoBean.getBackups().contains(name)){
             throw new IOException("备份名称已被占用");
         }
-        File saveFolder = new File(backup,name);
-        saveFolder.mkdir();
-        File backupTagTable = new File(saveFolder,TAG_TABLE);
-        File backupFileTable = new File(saveFolder,FILE_TABLE);
-        tagTable.createNewFile();
-        fileTable.createNewFile();
-        FileUtil.copyFile(tagTable,backupTagTable);
-        FileUtil.copyFile(fileTable,backupFileTable);
+        //File saveFolder = new File(backup.toFile(),name);
+        Path saveFolder = Paths.get(backup.toString(),name);
+        Files.createDirectory(saveFolder);
+        Path backupTagTable = Paths.get(saveFolder.toString(),TAG_TABLE);
+        Path backupFileTable = Paths.get(saveFolder.toString(),FILE_TABLE);
+        Files.createFile(tagTable);
+        Files.createFile(fileTable);
+        FileUtil.copyFile(tagTable.toFile(),backupTagTable.toFile());
+        FileUtil.copyFile(fileTable.toFile(),backupFileTable.toFile());
         infoBean.getBackups().add(name);
-        FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent());
+        FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent().toString());
     }
 
     public void recover(String name) throws IOException {
-        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info)));
+        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info.toFile())));
         InfoBean infoBean = gson.fromJson(new String(bytes),InfoBean.class);
         if(!infoBean.getBackups().contains(name)){
             throw new IOException("未找到该备份");
         }
         tagRAF.close();
         fileRAF.close();
-        File folder = new File(backup,name);
-        File backupTagTable = new File(folder,TAG_TABLE);
-        File backupFileTable = new File(folder,FILE_TABLE);
-        FileUtil.copyFile(backupTagTable,tagTable);
-        FileUtil.copyFile(backupFileTable,fileTable);
+        Path folder = Paths.get(backup.toString(),name);
+        Path backupTagTable = Paths.get(folder.toString(),TAG_TABLE);
+        Path backupFileTable = Paths.get(folder.toString(),FILE_TABLE);
+        FileUtil.copyFile(backupTagTable.toFile(),tagTable.toFile());
+        FileUtil.copyFile(backupFileTable.toFile(),fileTable.toFile());
         init();
     }
 
     public void removeBackup(String name) throws IOException {
-        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info)));
+        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info.toFile())));
         InfoBean infoBean = gson.fromJson(new String(bytes),InfoBean.class);
-        FileUtil.remove(new File(backup,name));
+        FileUtil.remove(new File(backup.toFile(),name));
         infoBean.getBackups().remove(name);
-        FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent());
+        FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent().toString());
     }
 
     private void updateOffset(String oldJson,String newJson,long offset,boolean file) throws IOException {
@@ -297,7 +303,7 @@ public class DataStorage {
      * @throws IOException
      */
     private void insertOrRemoveFileRecord(String oldJson,String newJson,long offset) throws IOException {
-        File tmp=File.createTempFile("file_tmp", null,dir);
+        File tmp=Files.createTempFile(dir,"file_tmp", null).toFile();
         tmp.deleteOnExit();
         FileUtil.saveAfterToTemp(fileRAF,fileRAF.getFilePointer(),fileEndOffset,tmp);
         fileRAF.seek(offset);
@@ -312,7 +318,7 @@ public class DataStorage {
     }
 
     private void insertOrRemoveTagRecord(String oldJson,String newJson,long offset) throws IOException {
-        File tmp=File.createTempFile("tag_tmp", null,dir);
+        File tmp=Files.createTempFile(dir,"tag_tmp", null).toFile();
         tmp.deleteOnExit();
         FileUtil.saveAfterToTemp(tagRAF,tagRAF.getFilePointer(),tagEndOffset,tmp);
         tagRAF.seek(offset);
@@ -385,12 +391,12 @@ public class DataStorage {
     }
 
     private boolean canRead() throws IOException {
-        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info)));
+        byte[] bytes = FileUtil.readInputStream(new BufferedInputStream(new FileInputStream(info.toFile())));
         String json = new String(bytes);
         if("".equals(json)){
             InfoBean infoBean = new InfoBean();
             infoBean.setTableVersion(TABLE_VERSION);
-            FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent());
+            FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent().toString());
             return true;
         }else {
             InfoBean infoBean = gson.fromJson(json,InfoBean.class);
