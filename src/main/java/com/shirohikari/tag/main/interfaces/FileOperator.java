@@ -20,59 +20,60 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 
 /**
- * 定义如何tag_table和file_table文件中的信息与TagBean和FileBean对应的json进行转换，并进行存储和读取
+ * 定义如何tag_table和file_table文件中的信息与TagBean和FileBean对应的json进行转换，
+ * 并进行存储和读取，一条记录应在文件中连续
  * @author ShiroHikariyayo
  */
-public interface FileOperator<T> {
+public interface FileOperator {
 
     /**
      * 读取下一个数据
      * @return 下一个数据
      * @throws IOException
      */
-    public T readNext() throws IOException;
+    String readNext() throws IOException;
 
     /**
      * 写入下一个数据
-     * @param data 下一个数据
+     * @param json 下一个数据
      * @throws IOException
      */
-    public void write(T data) throws IOException;
+    void write(String json) throws IOException;
 
     /**
      * 返回当前位置
      * @return 当前位置
      */
-    public long position() throws IOException;
+    long position() throws IOException;
 
     /**
      * 移动到指定位置读取
      * @param position 读取位置
      */
-    public void position(long position) throws IOException;
+    void position(long position) throws IOException;
 
     /**
      * 定义储存一条数据，除了数据本身所需的字节数以外的字节数
      * @return 额外字节数
      */
-    public int messageDefineLength();
+    int messageDefineLength();
 
     /**
      * 文件对应的FileChannel
      * @return 文件对应的FileChannel
      */
-    public FileChannel getFileChannel() throws IOException;
+    FileChannel getFileChannel() throws IOException;
 
     /**
      * 文件对应的FileChannel
      * @param position FileChannel的读取位置
      * @return 文件对应的FileChannel
      */
-    public FileChannel getFileChannel(long position) throws IOException;
+    FileChannel getFileChannel(long position) throws IOException;
 
     /**
      * 文件最大位置
      * @return
      */
-    public long size() throws IOException;
+    long size() throws IOException;
 }

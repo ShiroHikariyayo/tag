@@ -1,7 +1,5 @@
 /*
  * Copyright (C) 2023 ShiroHikariyayo
- * Copyright 2008 Google Inc.
- * used google/gson,see https://github.com/google/gson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +16,6 @@
 
 package com.shirohikari.tag.main.interfaces.impl;
 
-import com.google.gson.Gson;
 import com.shirohikari.tag.main.interfaces.FileOperator;
 
 import java.io.IOException;
@@ -30,30 +27,28 @@ import java.nio.file.StandardOpenOption;
 /**
  * @author ShiroHikariyayo
  */
-public class TextFileOperator<T> implements FileOperator<T> {
+public class TextFileOperator implements FileOperator {
 
     private static final int BUFFER_LENGTH = 1024;
-    private Path file;
+
     private FileChannel channel;
     private ByteBuffer buffer;
     private StringBuilder jsonBuilder;
-    private Gson gson;
-    private Class<T> clazz;
 
-    public TextFileOperator(Path file,Class<T> clazz) throws IOException {
-        this.file = file;
-        this.clazz = clazz;
+    public TextFileOperator(Path file) throws IOException {
         this.channel = FileChannel.open(file,StandardOpenOption.READ,StandardOpenOption.WRITE);
         this.buffer = ByteBuffer.allocateDirect(BUFFER_LENGTH);
-        this.gson = new Gson();
         this.jsonBuilder = new StringBuilder();
     }
 
     @Override
-    public T readNext() throws IOException {
+    public String readNext() throws IOException {
         long startPosition = channel.position();
         String json;
-        channel.read(buffer);
+        int hasNext = channel.read(buffer);
+        if (hasNext == -1) {
+            return null;
+        }
         buffer.flip();
         int len = buffer.getInt();
         if(len < BUFFER_LENGTH){
@@ -84,13 +79,12 @@ public class TextFileOperator<T> implements FileOperator<T> {
         buffer.clear();
         jsonBuilder.delete(0,jsonBuilder.length());
         channel.position(startPosition + len + Integer.BYTES);
-        return gson.fromJson(json,clazz);
+        return json;
     }
 
     @Override
-    public void write(T data) throws IOException {
+    public void write(String json) throws IOException {
         channel.position(channel.position());
-        String json = gson.toJson(data);
         buffer.putInt(json.getBytes().length);
         int len = json.getBytes().length;
         if(len < 1020){
@@ -141,7 +135,7 @@ public class TextFileOperator<T> implements FileOperator<T> {
 
     @Override
     public long size() throws IOException {
-        return channel.position(0).size();
+        return channel.size();
     }
 
     private void writePart() throws IOException {

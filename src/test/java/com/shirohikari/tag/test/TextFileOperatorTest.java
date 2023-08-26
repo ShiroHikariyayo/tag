@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2023 ShiroHikariyayo
+ * Copyright 2008 Google Inc.
+ * used google/gson,see https://github.com/google/gson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +18,7 @@
 
 package com.shirohikari.tag.test;
 
+import com.google.gson.Gson;
 import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.main.interfaces.impl.TextFileOperator;
 import org.junit.Test;
@@ -28,10 +31,11 @@ public class TextFileOperatorTest {
 
     @Test
     public void write() throws IOException {
-        TextFileOperator<FileBean> operator = new TextFileOperator(Paths.get("E:\\test\\1.txt"),FileBean.class);
-        operator.write(new FileBean(0,"E:\\test","bean1",new HashSet<>()));
-        operator.write(new FileBean(1,"E:\\test","bean2",new HashSet<>()));
-        operator.write(new FileBean(2,"E:\\test","bean3",new HashSet<>()));
+        TextFileOperator operator = new TextFileOperator(Paths.get("E:\\test\\1.txt"));
+        Gson gson = new Gson();
+        operator.write(gson.toJson(new FileBean(0,"E:\\test","bean1",new HashSet<>())));
+        operator.write(gson.toJson(new FileBean(1,"E:\\test","bean2",new HashSet<>())));
+        operator.write(gson.toJson(new FileBean(2,"E:\\test","bean3",new HashSet<>())));
         operator.position(0);
         System.out.println(operator.readNext());
         System.out.println(operator.readNext());
@@ -40,16 +44,18 @@ public class TextFileOperatorTest {
 
     @Test
     public void write2() throws IOException {
-        TextFileOperator<FileBean> operator = new TextFileOperator(Paths.get("E:\\test\\1.txt"),FileBean.class);
+        TextFileOperator operator = new TextFileOperator(Paths.get("E:\\test\\1.txt"));
         StringBuilder sb = new StringBuilder();
         for (int i=0;i<=100;i++){
             sb.append(System.currentTimeMillis());
         }
-        operator.write(new FileBean(1,"E:\\test",sb.toString(),new HashSet<>()));
-        operator.write(new FileBean(2,"E:\\test",sb.toString(),new HashSet<>()));
+        Gson gson = new Gson();
+        operator.write(gson.toJson(new FileBean(1,"E:\\test",sb.toString(),new HashSet<>())));
+        operator.write(gson.toJson(new FileBean(2,"E:\\test",sb.toString(),new HashSet<>())));
         operator.position(0);
-        System.out.println(operator.readNext());
-        System.out.println(operator.readNext());
+        for (int i=0;i<=10;i++){
+            System.out.println(operator.readNext());
+        }
         System.out.println(operator.position());
     }
 }
