@@ -302,8 +302,7 @@ public class DataStorage {
      * @throws IOException
      */
     private void insertOrRemoveFileRecord(String oldJson,String newJson,long offset) throws IOException {
-        File tmp=Files.createTempFile(dir,"file_tmp", null).toFile();
-        tmp.deleteOnExit();
+        Path tmp=Files.createTempFile(dir,"file_tmp", null);
         FileUtil.saveAfterToTemp(fileRAF,fileRAF.getFilePointer(),fileEndOffset,tmp);
         fileRAF.seek(offset);
         if(newJson != null){
@@ -313,12 +312,11 @@ public class DataStorage {
             fileEndOffset = fileEndOffset - oldJson.getBytes().length - 2;
         }
         FileUtil.readAndCover(fileRAF,fileRAF.getFilePointer(),fileEndOffset,tmp);
-        tmp.delete();
+        Files.delete(tmp);
     }
 
     private void insertOrRemoveTagRecord(String oldJson,String newJson,long offset) throws IOException {
-        File tmp=Files.createTempFile(dir,"tag_tmp", null).toFile();
-        tmp.deleteOnExit();
+        Path tmp=Files.createTempFile(dir,"tag_tmp", null);
         FileUtil.saveAfterToTemp(tagRAF,tagRAF.getFilePointer(),tagEndOffset,tmp);
         tagRAF.seek(offset);
         if(newJson != null){
@@ -329,7 +327,7 @@ public class DataStorage {
         }
         tagRAF.setLength(tagEndOffset);
         FileUtil.readAndCover(tagRAF,tagRAF.getFilePointer(),tagEndOffset,tmp);
-        tmp.delete();
+        Files.delete(tmp);
     }
 
     private void checkFileBean(FileBean bean,int operate) throws IOException {

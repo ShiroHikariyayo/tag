@@ -78,16 +78,16 @@ public class FileUtil {
         }
     }
 
-    public static void saveAfterToTemp(RandomAccessFile raf, long start, long end, File file) throws IOException {
-        FileChannel saveChannel = new FileOutputStream(file).getChannel();
+    public static void saveAfterToTemp(RandomAccessFile raf, long start, long end, Path file) throws IOException {
+        FileChannel saveChannel = FileChannel.open(file,StandardOpenOption.WRITE);
         FileChannel rafChannel = raf.getChannel().position(0);
         rafChannel.transferTo(start,end-start,saveChannel);
         saveChannel.close();
     }
 
-    public static void readAndCover(RandomAccessFile raf,long start,long end,File file) throws IOException {
+    public static void readAndCover(RandomAccessFile raf,long start,long end,Path file) throws IOException {
         raf.setLength(end);
-        FileChannel inChannel = new FileInputStream(file).getChannel();
+        FileChannel inChannel = FileChannel.open(file,StandardOpenOption.READ);
         FileChannel rafChannel = raf.getChannel();
         MappedByteBuffer out = rafChannel.map(FileChannel.MapMode.READ_WRITE,start,end-start);
         ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
