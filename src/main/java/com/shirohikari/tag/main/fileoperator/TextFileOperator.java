@@ -47,6 +47,7 @@ public class TextFileOperator implements IFileOperator {
 
     @Override
     public String readNext() throws IOException {
+        //todo
         long startPosition = channel.position();
         String json;
         int hasNext = channel.read(buffer);

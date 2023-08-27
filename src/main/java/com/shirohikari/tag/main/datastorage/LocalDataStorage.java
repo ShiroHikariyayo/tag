@@ -23,10 +23,10 @@ import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.main.bean.InfoBean;
 import com.shirohikari.tag.main.bean.TagBean;
 import com.shirohikari.tag.main.fileoperator.IFileOperator;
-import com.shirohikari.tag.main.fileoperator.TextFileOperator;
+import com.shirohikari.tag.main.fileoperator.RafFileOperator;
 import com.shirohikari.tag.util.FileUtil;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -68,8 +68,8 @@ public class LocalDataStorage implements IDataStorage {
         this.tagTable = tagTable;
         this.fileTable = fileTable;
         this.info = info;
-        this.tagOperator = tagOperator == null ? new TextFileOperator(tagTable) : tagOperator;
-        this.fileOperator = fileOperator == null ? new TextFileOperator(fileTable) : fileOperator;
+        this.tagOperator = tagOperator == null ? new RafFileOperator(tagTable) : tagOperator;
+        this.fileOperator = fileOperator == null ? new RafFileOperator(fileTable) : fileOperator;
         init();
     }
 

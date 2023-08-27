@@ -183,8 +183,10 @@ public class TagFile {
         if(tags != null){
             for(String tag:tags){
                 TagBean tagBean = dataStorage.getTagBean(tag);
-                tagBeans.add(tagBean);
-                fileBeanIds.addAll(tagBean.getIdSet());
+                if(tagBean != null){
+                    tagBeans.add(tagBean);
+                    fileBeanIds.addAll(tagBean.getIdSet());
+                }
             }
             for(Integer id:fileBeanIds){
                 FileBean fileBean = dataStorage.getFileBean(id);
