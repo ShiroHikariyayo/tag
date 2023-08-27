@@ -33,9 +33,10 @@ public class TextFileOperator implements IFileOperator {
     private ByteBuffer buffer;
     private StringBuilder jsonBuilder;
 
-    public TextFileOperator() throws IOException {
+    public TextFileOperator() {
         this.buffer = ByteBuffer.allocateDirect(BUFFER_LENGTH);
         this.jsonBuilder = new StringBuilder();
+        throw new RuntimeException("此实现未完成");
     }
 
     @Override
@@ -59,7 +60,7 @@ public class TextFileOperator implements IFileOperator {
         }
         buffer.flip();
         int len = buffer.getInt();
-        if(len < BUFFER_LENGTH){
+        if(len <= 1020){
             byte[] data = new byte[len];
             buffer.get(data,0,len);
             json = new String(data);
@@ -143,8 +144,22 @@ public class TextFileOperator implements IFileOperator {
 
     @Override
     public void setLength(long length) throws IOException {
-        channel.truncate(length);
         //todo
+        //修不来
+        long position = channel.position();
+        if(channel.size() >= length){
+            channel.truncate(length);
+        }else {
+            int len = (int) (length - channel.size());
+            byte[] emptyData = new byte[len];
+            ByteBuffer emptyBuffer = ByteBuffer.allocate(len);
+            emptyBuffer.put(emptyData);
+            emptyBuffer.flip();
+            channel.position(channel.size());
+            channel.write(emptyBuffer);
+            channel.force(false);
+        }
+        channel.position(position);
     }
 
     @Override

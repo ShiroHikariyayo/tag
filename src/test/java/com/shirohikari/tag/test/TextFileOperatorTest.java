@@ -24,6 +24,8 @@ import com.shirohikari.tag.main.fileoperator.TextFileOperator;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.util.HashSet;
 
@@ -48,7 +50,7 @@ public class TextFileOperatorTest {
         TextFileOperator operator = new TextFileOperator();
         operator.load(Paths.get("E:\\test\\1.txt"));
         StringBuilder sb = new StringBuilder();
-        for (int i=0;i<=100;i++){
+        for (int i=0;i<=200;i++){
             sb.append(System.currentTimeMillis());
         }
         Gson gson = new Gson();
@@ -58,6 +60,19 @@ public class TextFileOperatorTest {
         for (int i=0;i<=10;i++){
             System.out.println(operator.readNext());
         }
-        System.out.println(operator.position());
+
+        String s = "后续添加";
+        System.out.println("size:"+operator.size());
+        System.out.println("position:"+operator.position());
+        operator.setLength(operator.position() + s.getBytes().length + 4);
+        System.out.println("size:"+operator.size());
+        System.out.println("position:"+operator.position());
+
+        MappedByteBuffer byteBuffer = operator.getFileChannel().map(
+                FileChannel.MapMode.READ_WRITE,operator.position(), operator.size() - operator.position());
+        byteBuffer.putInt(s.getBytes().length);
+        byteBuffer.put(s.getBytes());
+        System.out.println("size:"+operator.size());
+        System.out.println("position:"+operator.position());
     }
 }
