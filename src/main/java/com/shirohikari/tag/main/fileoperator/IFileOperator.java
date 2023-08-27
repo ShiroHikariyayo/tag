@@ -28,11 +28,18 @@ import java.nio.file.Path;
 public interface IFileOperator {
 
     /**
-     * 当要操作其他文件时,重新加载文件
+     * 加载文件
      * @param path
      * @return
+     * @throws IOException
      */
-    void reload(Path path) throws IOException;
+    void load(Path path) throws IOException;
+
+    /**
+     * 关闭与文件的连接
+     * @throws IOException
+     */
+    void close() throws IOException;
 
     /**
      * 读取下一个数据
@@ -76,8 +83,15 @@ public interface IFileOperator {
     FileChannel getFileChannel() throws IOException;
 
     /**
+     * 强制写入文件
+     * @throws IOException
+     */
+    void force() throws IOException;
+
+    /**
      * 设置文件大小
      * @param length
+     * @throws IOException
      */
     void setLength(long length) throws IOException;
 

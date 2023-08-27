@@ -16,7 +16,6 @@
 
 package com.shirohikari.tag.main.fileoperator;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
@@ -29,14 +28,14 @@ public class RafFileOperator implements IFileOperator {
 
     private RandomAccessFile raf;
 
-    public RafFileOperator(Path file) throws FileNotFoundException {
-        raf = new RandomAccessFile(file.toFile(),"rwd");
+    @Override
+    public void load(Path path) throws IOException {
+        raf = new RandomAccessFile(path.toFile(),"rwd");
     }
 
     @Override
-    public void reload(Path path) throws IOException {
+    public void close() throws IOException {
         raf.close();
-        raf = new RandomAccessFile(path.toFile(),"rwd");
     }
 
     @Override
@@ -67,6 +66,11 @@ public class RafFileOperator implements IFileOperator {
     @Override
     public FileChannel getFileChannel() throws IOException {
         return raf.getChannel();
+    }
+
+    @Override
+    public void force() throws IOException {
+
     }
 
     @Override

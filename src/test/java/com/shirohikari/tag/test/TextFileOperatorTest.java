@@ -31,7 +31,8 @@ public class TextFileOperatorTest {
 
     @Test
     public void write() throws IOException {
-        TextFileOperator operator = new TextFileOperator(Paths.get("E:\\test\\1.txt"));
+        TextFileOperator operator = new TextFileOperator();
+        operator.load(Paths.get("E:\\test\\1.txt"));
         Gson gson = new Gson();
         operator.write(gson.toJson(new FileBean(0,"E:\\test","bean1",new HashSet<>())));
         operator.write(gson.toJson(new FileBean(1,"E:\\test","bean2",new HashSet<>())));
@@ -44,7 +45,8 @@ public class TextFileOperatorTest {
 
     @Test
     public void write2() throws IOException {
-        TextFileOperator operator = new TextFileOperator(Paths.get("E:\\test\\1.txt"));
+        TextFileOperator operator = new TextFileOperator();
+        operator.load(Paths.get("E:\\test\\1.txt"));
         StringBuilder sb = new StringBuilder();
         for (int i=0;i<=100;i++){
             sb.append(System.currentTimeMillis());

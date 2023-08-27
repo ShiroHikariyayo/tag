@@ -16,9 +16,9 @@
 
 package com.shirohikari.tag.test;
 
-import com.shirohikari.tag.main.datastorage.LocalDataStorage;
 import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.main.bean.TagBean;
+import com.shirohikari.tag.main.datastorage.LocalDataStorage;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -111,5 +111,19 @@ public class LocalDataStorageTest {
     public void removeBackup() throws IOException {
         LocalDataStorage d = LocalDataStorage.create("E:\\test");
         d.removeBackup("test1");
+    }
+
+    @Test
+    public void backups() throws IOException {
+        LocalDataStorage d = LocalDataStorage.create("E:\\test");
+        d.backup("test2");
+        System.out.println("已备份");
+        d.recover("test1");
+        System.out.println("已恢复");
+        HashSet<String> s = new HashSet<>();
+        s.add("t1");
+        d.addFileRecord(new FileBean("E:\\test\\file_table","这是使用备份后的",s));
+        d.removeBackup("test2");
+        System.out.println("已删除");
     }
 }

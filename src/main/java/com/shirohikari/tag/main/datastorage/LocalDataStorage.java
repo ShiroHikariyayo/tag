@@ -68,8 +68,10 @@ public class LocalDataStorage implements IDataStorage {
         this.tagTable = tagTable;
         this.fileTable = fileTable;
         this.info = info;
-        this.tagOperator = tagOperator == null ? new RafFileOperator(tagTable) : tagOperator;
-        this.fileOperator = fileOperator == null ? new RafFileOperator(fileTable) : fileOperator;
+        this.tagOperator = tagOperator == null ? new RafFileOperator() : tagOperator;
+        this.fileOperator = fileOperator == null ? new RafFileOperator() : fileOperator;
+        this.tagOperator.load(tagTable);
+        this.fileOperator.load(fileTable);
         init();
     }
 
@@ -277,13 +279,17 @@ public class LocalDataStorage implements IDataStorage {
         if(!infoBean.getBackups().contains(name)){
             throw new IOException("未找到该备份");
         }
+        tagOperator.force();
+        fileOperator.force();
+        tagOperator.close();
+        fileOperator.close();
         Path folder = Paths.get(backup.toString(),name);
         Path backupTagTable = Paths.get(folder.toString(),TAG_TABLE);
         Path backupFileTable = Paths.get(folder.toString(),FILE_TABLE);
         FileUtil.copyFile(backupTagTable,tagTable);
         FileUtil.copyFile(backupFileTable,fileTable);
-        tagOperator.reload(tagTable);
-        fileOperator.reload(fileTable);
+        tagOperator.load(tagTable);
+        fileOperator.load(fileTable);
         init();
     }
 

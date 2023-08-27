@@ -33,16 +33,19 @@ public class TextFileOperator implements IFileOperator {
     private ByteBuffer buffer;
     private StringBuilder jsonBuilder;
 
-    public TextFileOperator(Path file) throws IOException {
-        this.channel = FileChannel.open(file,StandardOpenOption.READ,StandardOpenOption.WRITE);
+    public TextFileOperator() throws IOException {
         this.buffer = ByteBuffer.allocateDirect(BUFFER_LENGTH);
         this.jsonBuilder = new StringBuilder();
     }
 
     @Override
-    public void reload(Path file) throws IOException {
-        this.channel.close();
+    public void load(Path file) throws IOException {
         this.channel = FileChannel.open(file,StandardOpenOption.READ,StandardOpenOption.WRITE);
+    }
+
+    @Override
+    public void close() throws IOException {
+        this.channel.close();
     }
 
     @Override
@@ -131,6 +134,11 @@ public class TextFileOperator implements IFileOperator {
     @Override
     public FileChannel getFileChannel() {
         return channel;
+    }
+
+    @Override
+    public void force() throws IOException {
+        this.channel.force(true);
     }
 
     @Override
