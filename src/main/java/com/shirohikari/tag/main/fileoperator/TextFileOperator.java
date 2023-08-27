@@ -40,6 +40,12 @@ public class TextFileOperator implements IFileOperator {
     }
 
     @Override
+    public void reload(Path file) throws IOException {
+        this.channel.close();
+        this.channel = FileChannel.open(file,StandardOpenOption.READ,StandardOpenOption.WRITE);
+    }
+
+    @Override
     public String readNext() throws IOException {
         long startPosition = channel.position();
         String json;
@@ -85,20 +91,20 @@ public class TextFileOperator implements IFileOperator {
         channel.position(channel.position());
         buffer.putInt(json.getBytes().length);
         int len = json.getBytes().length;
-        if(len < 1020){
+        if(len <= 1020){
             buffer.put(json.getBytes());
             buffer.flip();
             channel.write(buffer);
+        }else if(len <= BUFFER_LENGTH){
+            writePart(json.getBytes(),0,1020);
+            writePart(json.getBytes(),1020,len - 1020);
         }else {
-            buffer.put(json.getBytes(),0,1020);
-            writePart();
-            buffer.put(json.getBytes(),1020,4);
-            writePart();
+            writePart(json.getBytes(),0,1020);
+            writePart(json.getBytes(),1020,4);
             int start = BUFFER_LENGTH;
             int end = len - BUFFER_LENGTH;
             while (start < len) {
-                buffer.put(json.getBytes(),start,Math.min(end,BUFFER_LENGTH));
-                writePart();
+                writePart(json.getBytes(),start,Math.min(end,BUFFER_LENGTH));
                 start += BUFFER_LENGTH;
                 end -= BUFFER_LENGTH;
             }
@@ -127,8 +133,9 @@ public class TextFileOperator implements IFileOperator {
     }
 
     @Override
-    public FileChannel getFileChannel(long position) throws IOException {
-        return channel.position(position);
+    public void setLength(long length) throws IOException {
+        channel.truncate(length);
+        //todo
     }
 
     @Override
@@ -141,7 +148,8 @@ public class TextFileOperator implements IFileOperator {
         return "TextFileOperator-1";
     }
 
-    private void writePart() throws IOException {
+    private void writePart(byte[] data,int offset,int length) throws IOException {
+        buffer.put(data,offset,length);
         buffer.flip();
         channel.write(buffer);
         buffer.clear();

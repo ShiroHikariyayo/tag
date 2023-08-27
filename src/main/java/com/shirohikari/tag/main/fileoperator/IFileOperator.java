@@ -18,6 +18,7 @@ package com.shirohikari.tag.main.fileoperator;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 
 /**
  * 定义如何tag_table和file_table文件中的信息与TagBean和FileBean对应的json进行转换，
@@ -25,6 +26,13 @@ import java.nio.channels.FileChannel;
  * @author ShiroHikariyayo
  */
 public interface IFileOperator {
+
+    /**
+     * 当要操作其他文件时,重新加载文件
+     * @param path
+     * @return
+     */
+    void reload(Path path) throws IOException;
 
     /**
      * 读取下一个数据
@@ -68,12 +76,10 @@ public interface IFileOperator {
     FileChannel getFileChannel() throws IOException;
 
     /**
-     * 文件对应的FileChannel
-     * @param position FileChannel的读取位置
-     * @return 文件对应的FileChannel
-     * @throws IOException
+     * 设置文件大小
+     * @param length
      */
-    FileChannel getFileChannel(long position) throws IOException;
+    void setLength(long length) throws IOException;
 
     /**
      * 文件最大位置

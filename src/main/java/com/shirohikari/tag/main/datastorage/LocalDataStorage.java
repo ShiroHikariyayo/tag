@@ -60,8 +60,6 @@ public class LocalDataStorage implements IDataStorage {
     private HashMap<String, TagBean> tagTagBeanMap;
     private IFileOperator tagOperator;
     private IFileOperator fileOperator;
-    private RandomAccessFile tagRAF;
-    private RandomAccessFile fileRAF;
     private Gson gson;
 
     private LocalDataStorage(Path dir, Path backup, Path tagTable, Path fileTable, Path info,IFileOperator tagOperator,IFileOperator fileOperator) throws IOException {
@@ -101,8 +99,6 @@ public class LocalDataStorage implements IDataStorage {
         if(!canRead()){
             throw new IOException("版本不统一");
         }
-        tagRAF = new RandomAccessFile(tagTable.toFile(),"rwd");
-        fileRAF = new RandomAccessFile(fileTable.toFile(),"rwd");
         tags = new HashSet<>();
         idOffsetMap = new LinkedHashMap<>();
         pathIdMap = new HashMap<>();
@@ -111,26 +107,28 @@ public class LocalDataStorage implements IDataStorage {
         tagOffsetMap = new HashMap<>();
         tagTagBeanMap = new HashMap<>();
         //读取file_table信息
-        while (fileRAF.getFilePointer() < fileRAF.length()){
-            long offset = fileRAF.getFilePointer();
-            String json = fileRAF.readUTF();
+        fileOperator.position(0);
+        while (fileOperator.position() < fileOperator.size()){
+            long offset = fileOperator.position();
+            String json = fileOperator.readNext();
             FileBean bean = gson.fromJson(json,FileBean.class);
             nextId = bean.getId() + 1;
             addToFileMaps(bean,offset);
         }
         System.gc();
-        fileEndOffset = fileRAF.length();
+        fileEndOffset = fileOperator.size();
         //读取tag_table信息
-        while (tagRAF.getFilePointer() < tagRAF.length()){
-            long offset = tagRAF.getFilePointer();
-            String json = tagRAF.readUTF();
+        tagOperator.position(0);
+        while (tagOperator.position() < tagOperator.size()){
+            long offset = tagOperator.position();
+            String json = tagOperator.readNext();
             TagBean bean = gson.fromJson(json, TagBean.class);
             tags.add(bean.getTag());
             tagOffsetMap.put(bean.getTag(),offset);
             tagTagBeanMap.put(bean.getTag(),bean);
         }
         System.gc();
-        tagEndOffset = tagRAF.length();
+        tagEndOffset = tagOperator.size();
     }
 
     @Override
@@ -174,17 +172,17 @@ public class LocalDataStorage implements IDataStorage {
         bean.setId(nextId++);
         addToFileMaps(bean,fileEndOffset);
         String json = gson.toJson(bean);
-        fileRAF.seek(fileEndOffset);
-        fileRAF.writeUTF(json);
-        fileEndOffset += json.getBytes().length + 2;
+        fileOperator.position(fileEndOffset);
+        fileOperator.write(json);
+        fileEndOffset += json.getBytes().length + fileOperator.messageDefineLength();
     }
 
     @Override
     public void updateFileRecord(FileBean bean) throws IOException {
         checkFileBean(bean,Operate.UPDATE);
         long offset = idOffsetMap.get(bean.getId());
-        fileRAF.seek(offset);
-        String oldJson = fileRAF.readUTF();
+        fileOperator.position(offset);
+        String oldJson = fileOperator.readNext();
         idFileBeanMap.replace(bean.getId(),bean);
         //可能会修改path
         if(bean.getNotStoredPaths() == null){
@@ -198,7 +196,7 @@ public class LocalDataStorage implements IDataStorage {
             pathFileBeanMap.put(bean.getPath(),bean);
         }
         String newJson = gson.toJson(bean);
-        updateOffset(oldJson,newJson,offset,true);
+        updateOffset(oldJson,newJson,offset,true,fileOperator.messageDefineLength());
         insertOrRemoveFileRecord(oldJson,newJson,offset);
     }
 
@@ -206,13 +204,13 @@ public class LocalDataStorage implements IDataStorage {
     public void removeFileRecord(FileBean bean) throws IOException {
         checkFileBean(bean,Operate.REMOVE);
         long offset = idOffsetMap.get(bean.getId());
-        fileRAF.seek(offset);
-        String oldJson = fileRAF.readUTF();
+        fileOperator.position(offset);
+        String oldJson = fileOperator.readNext();
         idOffsetMap.remove(bean.getId());
         idFileBeanMap.remove(bean.getId());
         pathIdMap.remove(bean.getPath());
         pathFileBeanMap.remove(bean.getPath());
-        updateOffset(oldJson,null,offset,true);
+        updateOffset(oldJson,null,offset,true,fileOperator.messageDefineLength());
         insertOrRemoveFileRecord(oldJson,null,offset);
     }
 
@@ -223,20 +221,20 @@ public class LocalDataStorage implements IDataStorage {
         tagOffsetMap.put(bean.getTag(),tagEndOffset);
         tagTagBeanMap.put(bean.getTag(),bean);
         String json = gson.toJson(bean);
-        tagRAF.seek(tagEndOffset);
-        tagRAF.writeUTF(json);
-        tagEndOffset += json.getBytes().length + 2;
+        tagOperator.position(tagEndOffset);
+        tagOperator.write(json);
+        tagEndOffset += json.getBytes().length + tagOperator.messageDefineLength();
     }
 
     @Override
     public void updateTagRecord(TagBean bean) throws IOException {
         checkTagBean(bean,Operate.UPDATE);
         long offset = tagOffsetMap.get(bean.getTag());
-        tagRAF.seek(offset);
-        String oldJson = tagRAF.readUTF();
+        tagOperator.position(offset);
+        String oldJson = tagOperator.readNext();
         tagTagBeanMap.replace(bean.getTag(),bean);
         String newJson = gson.toJson(bean);
-        updateOffset(oldJson,newJson,offset,false);
+        updateOffset(oldJson,newJson,offset,false,tagOperator.messageDefineLength());
         insertOrRemoveTagRecord(oldJson,newJson,offset);
     }
 
@@ -244,12 +242,12 @@ public class LocalDataStorage implements IDataStorage {
     public void removeTagRecord(TagBean bean) throws IOException {
         checkTagBean(bean,Operate.REMOVE);
         long offset = tagOffsetMap.get(bean.getTag());
-        tagRAF.seek(offset);
-        String oldJson = tagRAF.readUTF();
+        tagOperator.position(offset);
+        String oldJson = tagOperator.readNext();
         tags.remove(bean.getTag());
         tagOffsetMap.remove(bean.getTag());
         tagTagBeanMap.remove(bean.getTag());
-        updateOffset(oldJson,null,offset,false);
+        updateOffset(oldJson,null,offset,false,tagOperator.messageDefineLength());
         insertOrRemoveTagRecord(oldJson,null,offset);
     }
 
@@ -279,13 +277,13 @@ public class LocalDataStorage implements IDataStorage {
         if(!infoBean.getBackups().contains(name)){
             throw new IOException("未找到该备份");
         }
-        tagRAF.close();
-        fileRAF.close();
         Path folder = Paths.get(backup.toString(),name);
         Path backupTagTable = Paths.get(folder.toString(),TAG_TABLE);
         Path backupFileTable = Paths.get(folder.toString(),FILE_TABLE);
         FileUtil.copyFile(backupTagTable,tagTable);
         FileUtil.copyFile(backupFileTable,fileTable);
+        tagOperator.reload(tagTable);
+        fileOperator.reload(fileTable);
         init();
     }
 
@@ -298,12 +296,12 @@ public class LocalDataStorage implements IDataStorage {
         FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent().toString());
     }
 
-    private void updateOffset(String oldJson,String newJson,long offset,boolean file) throws IOException {
+    private void updateOffset(String oldJson,String newJson,long offset,boolean file,int messageDefineLength) {
         long len;
         if(newJson != null){
             len = newJson.getBytes().length - oldJson.getBytes().length;
         }else {
-            len = -oldJson.getBytes().length - 2;
+            len = -oldJson.getBytes().length - messageDefineLength;
         }
         Iterator iter;
         if(file){
@@ -329,30 +327,29 @@ public class LocalDataStorage implements IDataStorage {
      */
     private void insertOrRemoveFileRecord(String oldJson,String newJson,long offset) throws IOException {
         Path tmp=Files.createTempFile(dir,"file_tmp", null);
-        FileUtil.saveAfterToTemp(fileRAF,fileRAF.getFilePointer(),fileEndOffset,tmp);
-        fileRAF.seek(offset);
+        FileUtil.saveAfterToTemp(fileOperator,fileOperator.position(),fileEndOffset,tmp);
+        fileOperator.position(offset);
         if(newJson != null){
-            fileRAF.writeUTF(newJson);
+            fileOperator.write(newJson);
             fileEndOffset = fileEndOffset - oldJson.getBytes().length + newJson.getBytes().length;
         }else {
-            fileEndOffset = fileEndOffset - oldJson.getBytes().length - 2;
+            fileEndOffset = fileEndOffset - oldJson.getBytes().length - fileOperator.messageDefineLength();
         }
-        FileUtil.readAndCover(fileRAF,fileRAF.getFilePointer(),fileEndOffset,tmp);
+        FileUtil.readAndCover(fileOperator,fileOperator.position(),fileEndOffset,tmp);
         Files.delete(tmp);
     }
 
     private void insertOrRemoveTagRecord(String oldJson,String newJson,long offset) throws IOException {
         Path tmp=Files.createTempFile(dir,"tag_tmp", null);
-        FileUtil.saveAfterToTemp(tagRAF,tagRAF.getFilePointer(),tagEndOffset,tmp);
-        tagRAF.seek(offset);
+        FileUtil.saveAfterToTemp(tagOperator,tagOperator.position(),tagEndOffset,tmp);
+        tagOperator.position(offset);
         if(newJson != null){
-            tagRAF.writeUTF(newJson);
+            tagOperator.write(newJson);
             tagEndOffset = tagEndOffset - oldJson.getBytes().length + newJson.getBytes().length;
         }else {
-            tagEndOffset = tagEndOffset - oldJson.getBytes().length - 2;
+            tagEndOffset = tagEndOffset - oldJson.getBytes().length - tagOperator.messageDefineLength();
         }
-        tagRAF.setLength(tagEndOffset);
-        FileUtil.readAndCover(tagRAF,tagRAF.getFilePointer(),tagEndOffset,tmp);
+        FileUtil.readAndCover(tagOperator,tagOperator.position(),tagEndOffset,tmp);
         Files.delete(tmp);
     }
 
@@ -424,11 +421,7 @@ public class LocalDataStorage implements IDataStorage {
             return true;
         }else {
             InfoBean infoBean = gson.fromJson(json,InfoBean.class);
-            if(tagOperator.version().equals(infoBean.getTagVersion()) && fileOperator.version().equals(infoBean.getFileVersion())){
-                return true;
-            }else {
-                return false;
-            }
+            return tagOperator.version().equals(infoBean.getTagVersion()) && fileOperator.version().equals(infoBean.getFileVersion());
         }
     }
 
