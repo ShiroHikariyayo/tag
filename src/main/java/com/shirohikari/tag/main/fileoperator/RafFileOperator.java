@@ -76,7 +76,9 @@ public class RafFileOperator implements IFileOperator {
 
     @Override
     public void truncate(long length) throws IOException {
-        raf.setLength(length);
+        if(length < raf.length()){
+            raf.setLength(length);
+        }
     }
 
     @Override
