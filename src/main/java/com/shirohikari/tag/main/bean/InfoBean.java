@@ -27,7 +27,11 @@ public class InfoBean {
     private ArrayList<String> backups;
 
     public InfoBean() {
-        this(null,null,new ArrayList<>());
+        this(null,null);
+    }
+
+    public InfoBean(String tagVersion,String fileVersion) {
+        this(tagVersion,fileVersion,new ArrayList<>());
     }
 
     public InfoBean(String tagVersion,String fileVersion, ArrayList<String> backups) {

@@ -71,8 +71,6 @@ public class LocalDataStorage implements IDataStorage {
         this.info = info;
         this.tagOperator = tagOperator == null ? new TextFileOperator() : tagOperator;
         this.fileOperator = fileOperator == null ? new TextFileOperator() : fileOperator;
-        this.tagOperator.load(tagTable);
-        this.fileOperator.load(fileTable);
         init();
     }
 
@@ -102,6 +100,8 @@ public class LocalDataStorage implements IDataStorage {
         if(!canRead()){
             throw new IOException("版本不统一");
         }
+        this.tagOperator.load(tagTable);
+        this.fileOperator.load(fileTable);
         tags = new HashSet<>();
         idOffsetMap = new LinkedHashMap<>();
         pathIdMap = new HashMap<>();
@@ -265,12 +265,12 @@ public class LocalDataStorage implements IDataStorage {
         FileUtil.makeDirectory(saveFolder);
         Path backupTagTable = Paths.get(saveFolder.toString(),TAG_TABLE);
         Path backupFileTable = Paths.get(saveFolder.toString(),FILE_TABLE);
-        FileUtil.makeFile(tagTable);
-        FileUtil.makeFile(fileTable);
         FileUtil.copyFile(tagTable,backupTagTable);
         FileUtil.copyFile(fileTable,backupFileTable);
+        InfoBean backupInfo = new InfoBean(tagOperator.version(),fileOperator.version());
+        FileUtil.saveFile(gson.toJson(backupInfo).getBytes(),INFO,saveFolder.toString());
         infoBean.getBackups().add(name);
-        FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,info.getParent().toString());
+        FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,dir.toString());
     }
 
     @Override
@@ -287,10 +287,14 @@ public class LocalDataStorage implements IDataStorage {
         Path folder = Paths.get(backup.toString(),name);
         Path backupTagTable = Paths.get(folder.toString(),TAG_TABLE);
         Path backupFileTable = Paths.get(folder.toString(),FILE_TABLE);
+        Path info = Paths.get(folder.toString(),INFO);
         FileUtil.copyFile(backupTagTable,tagTable);
         FileUtil.copyFile(backupFileTable,fileTable);
-        tagOperator.load(tagTable);
-        fileOperator.load(fileTable);
+        byte[] backupInfoBytes = Files.readAllBytes(info);
+        InfoBean backupBean = gson.fromJson(new String(backupInfoBytes),InfoBean.class);
+        infoBean.setTagVersion(backupBean.getTagVersion());
+        infoBean.setFileVersion(backupBean.getFileVersion());
+        FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,dir.toString());
         init();
     }
 
