@@ -42,7 +42,7 @@ public interface IFileOperator {
     void close() throws IOException;
 
     /**
-     * 读取下一个数据
+     * 读取下一个数据，没有下一个数据时返回null
      * @return 下一个数据
      * @throws IOException
      */

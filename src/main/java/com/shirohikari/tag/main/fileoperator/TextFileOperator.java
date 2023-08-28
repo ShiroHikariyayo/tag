@@ -28,7 +28,7 @@ import java.nio.file.StandardOpenOption;
 public class TextFileOperator implements IFileOperator {
 
     private static final int BUFFER_LENGTH = 1024;
-    private static final String VERSION = "TextFileOperator-1";
+    private static final String VERSION = TextFileOperator.class.getName();
 
     private final ByteBuffer buffer;
     private final StringBuilder jsonBuilder;
