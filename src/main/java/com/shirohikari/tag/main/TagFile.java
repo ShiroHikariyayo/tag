@@ -478,7 +478,8 @@ public class TagFile {
      * @return
      */
     public Set<Integer> getFileBeansId(String tag){
-        return dataStorage.getTagBean(tag).getIdSet();
+        TagBean bean = dataStorage.getTagBean(tag);
+        return bean == null ? new HashSet<>() : bean.getIdSet();
     }
 
     /**
@@ -531,6 +532,36 @@ public class TagFile {
             }
         }
         return beans;
+    }
+
+    /**
+     * 查询拥有全部传入标签的文件路径
+     * @param tags
+     * @return
+     */
+    public List<String> getFilePaths(List<String> tags){
+        ArrayList<String> paths = new ArrayList<>();
+        Set<Integer> set = this.getFileBeansId(tags);
+        for(int id:set){
+            paths.add(dataStorage.getFileBean(id).getPath());
+        }
+        return paths;
+    }
+
+    /**
+     * 查询拥有传入标签的文件路径
+     * @param tag
+     * @return
+     */
+    public List<String> getFilePaths(String tag){
+        ArrayList<String> paths = new ArrayList<>();
+        TagBean tagBean;
+        if((tagBean = dataStorage.getTagBean(tag)) != null){
+            for(int id:tagBean.getIdSet()){
+                paths.add(dataStorage.getFileBean(id).getPath());
+            }
+        }
+        return paths;
     }
 
     private void updateIdInExistTag(HashSet<String> tagSet,Integer id) throws IOException {

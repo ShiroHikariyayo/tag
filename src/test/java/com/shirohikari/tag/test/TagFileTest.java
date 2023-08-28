@@ -209,4 +209,16 @@ public class TagFileTest {
         System.out.println(t.hasFile(0));
         t.removeBackup("备份1");
     }
+
+    @Test
+    public void getFilePaths() throws IOException {
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
+        System.out.println("标签数:"+t.getFileBeansId("标签1").size());
+        ArrayList<String> tags = new ArrayList<>();
+        tags.add("标签1");
+        tags.add("标签2");
+        System.out.println(t.getFilePaths("标签1"));
+        System.out.println("========================================");
+        System.out.println(t.getFilePaths(tags));
+    }
 }
