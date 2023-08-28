@@ -24,6 +24,7 @@ import com.shirohikari.tag.main.bean.InfoBean;
 import com.shirohikari.tag.main.bean.TagBean;
 import com.shirohikari.tag.main.fileoperator.IFileOperator;
 import com.shirohikari.tag.main.fileoperator.TextFileOperator;
+import com.shirohikari.tag.main.tableconverter.ITableConverter;
 import com.shirohikari.tag.util.FileUtil;
 
 import java.io.IOException;
@@ -53,6 +54,7 @@ public class LocalDataStorage implements IDataStorage {
     private final Path info;
     private final IFileOperator tagOperator;
     private final IFileOperator fileOperator;
+    private final Gson gson;
     private HashSet<String> tags;
     private LinkedHashMap<Integer,Long> idOffsetMap;
     private HashMap<Integer,FileBean> idFileBeanMap;
@@ -60,10 +62,9 @@ public class LocalDataStorage implements IDataStorage {
     private HashMap<String,FileBean> pathFileBeanMap;
     private HashMap<String, Long> tagOffsetMap;
     private HashMap<String, TagBean> tagTagBeanMap;
+    private ITableConverter tableConverter;
 
-    private Gson gson;
-
-    private LocalDataStorage(Path dir, Path backup, Path tagTable, Path fileTable, Path info,IFileOperator tagOperator,IFileOperator fileOperator) throws IOException {
+    private LocalDataStorage(Path dir, Path backup, Path tagTable, Path fileTable, Path info, IFileOperator tagOperator, IFileOperator fileOperator, ITableConverter tableConverter) throws IOException {
         this.dir = dir;
         this.backup = backup;
         this.tagTable = tagTable;
@@ -71,14 +72,16 @@ public class LocalDataStorage implements IDataStorage {
         this.info = info;
         this.tagOperator = tagOperator == null ? new TextFileOperator() : tagOperator;
         this.fileOperator = fileOperator == null ? new TextFileOperator() : fileOperator;
+        this.tableConverter = tableConverter;
+        this.gson = new Gson();
         init();
     }
 
     public static LocalDataStorage create(String dirPath) throws IOException {
-        return create(dirPath,null,null);
+        return create(dirPath,null,null,null);
     }
 
-    public static LocalDataStorage create(String dirPath,IFileOperator tagOperator,IFileOperator fileOperator) throws IOException {
+    public static LocalDataStorage create(String dirPath,IFileOperator tagOperator,IFileOperator fileOperator,ITableConverter converter) throws IOException {
         Path dir = Paths.get(dirPath);
         Path backup = Paths.get(dirPath,BACKUP);
         Path tagTable = Paths.get(dirPath,TAG_TABLE);
@@ -92,13 +95,12 @@ public class LocalDataStorage implements IDataStorage {
         FileUtil.makeFile(tagTable);
         FileUtil.makeFile(fileTable);
         FileUtil.makeFile(info);
-        return new LocalDataStorage(dir,backup,tagTable,fileTable,info,tagOperator,fileOperator);
+        return new LocalDataStorage(dir,backup,tagTable,fileTable,info,tagOperator,fileOperator,converter);
     }
 
     private void init() throws IOException {
-        gson = new Gson();
         if(!canRead()){
-            throw new IOException("版本不统一");
+            throw new IOException("table版本不统一");
         }
         this.tagOperator.load(tagTable);
         this.fileOperator.load(fileTable);
@@ -424,7 +426,7 @@ public class LocalDataStorage implements IDataStorage {
     private boolean canRead() throws IOException {
         byte[] bytes = Files.readAllBytes(info);
         String json = new String(bytes);
-        if("".equals(json)){
+        if(json.isEmpty()){
             InfoBean infoBean = new InfoBean();
             infoBean.setTagVersion(tagOperator.version());
             infoBean.setFileVersion(fileOperator.version());
@@ -432,7 +434,13 @@ public class LocalDataStorage implements IDataStorage {
             return true;
         }else {
             InfoBean infoBean = gson.fromJson(json,InfoBean.class);
-            return tagOperator.version().equals(infoBean.getTagVersion()) && fileOperator.version().equals(infoBean.getFileVersion());
+            if(tagOperator.version().equals(infoBean.getTagVersion()) && fileOperator.version().equals(infoBean.getFileVersion())){
+                return true;
+            }else if(tableConverter != null) {
+                return tableConverter.convert(infoBean.getTagVersion(),infoBean.getFileVersion(),tagTable,fileTable);
+            }else {
+                return false;
+            }
         }
     }
 

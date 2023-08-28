@@ -28,6 +28,7 @@ import java.nio.file.StandardOpenOption;
 public class TextFileOperator implements IFileOperator {
 
     private static final int BUFFER_LENGTH = 1024;
+    private static final String VERSION = "TextFileOperator-1";
 
     private final ByteBuffer buffer;
     private final StringBuilder jsonBuilder;
@@ -154,7 +155,7 @@ public class TextFileOperator implements IFileOperator {
 
     @Override
     public String version() {
-        return "TextFileOperator-1";
+        return VERSION;
     }
 
     private void writePart(byte[] data,int offset,int length) throws IOException {

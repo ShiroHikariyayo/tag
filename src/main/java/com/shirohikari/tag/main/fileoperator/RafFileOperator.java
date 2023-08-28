@@ -26,6 +26,7 @@ import java.nio.file.Path;
  */
 public class RafFileOperator implements IFileOperator {
 
+    private static final String VERSION = "RAFFileOperator-1";
     private RandomAccessFile raf;
 
     @Override
@@ -85,6 +86,6 @@ public class RafFileOperator implements IFileOperator {
 
     @Override
     public String version() {
-        return "RAFFileOperator-1";
+        return VERSION;
     }
 }
