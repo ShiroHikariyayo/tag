@@ -89,21 +89,11 @@ public class FileUtil {
     }
 
     public static void readAndCover(IFileOperator operator, long start, long end, Path file) throws IOException {
-        operator.setLength(end);
+        operator.truncate(end);
         FileChannel inChannel = FileChannel.open(file,StandardOpenOption.READ);
-        MappedByteBuffer out = operator.getFileChannel().map(FileChannel.MapMode.READ_WRITE,start,end-start);
-        ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
-        while (true) {
-            int r = inChannel.read(buffer);
-            if (r == -1) {
-                break;
-            }
-            buffer.flip();
-            out.put(buffer);
-            buffer.clear();
-        }
-        out.force();
-        closeMappedByteBuffer(out);
+        FileChannel destChannel = operator.getFileChannel();
+        inChannel.transferTo(0,inChannel.size(),destChannel);
+        destChannel.position(start);
         inChannel.close();
     }
 

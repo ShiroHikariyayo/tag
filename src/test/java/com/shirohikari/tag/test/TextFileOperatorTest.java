@@ -64,7 +64,7 @@ public class TextFileOperatorTest {
         String s = "后续添加";
         System.out.println("size:"+operator.size());
         System.out.println("position:"+operator.position());
-        operator.setLength(operator.position() + s.getBytes().length + 4);
+        operator.truncate(operator.position() + s.getBytes().length + 4);
         System.out.println("size:"+operator.size());
         System.out.println("position:"+operator.position());
 

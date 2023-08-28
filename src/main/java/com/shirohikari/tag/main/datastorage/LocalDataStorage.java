@@ -23,7 +23,7 @@ import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.main.bean.InfoBean;
 import com.shirohikari.tag.main.bean.TagBean;
 import com.shirohikari.tag.main.fileoperator.IFileOperator;
-import com.shirohikari.tag.main.fileoperator.RafFileOperator;
+import com.shirohikari.tag.main.fileoperator.TextFileOperator;
 import com.shirohikari.tag.util.FileUtil;
 
 import java.io.IOException;
@@ -51,6 +51,8 @@ public class LocalDataStorage implements IDataStorage {
     private final Path tagTable;
     private final Path fileTable;
     private final Path info;
+    private final IFileOperator tagOperator;
+    private final IFileOperator fileOperator;
     private HashSet<String> tags;
     private LinkedHashMap<Integer,Long> idOffsetMap;
     private HashMap<Integer,FileBean> idFileBeanMap;
@@ -58,8 +60,7 @@ public class LocalDataStorage implements IDataStorage {
     private HashMap<String,FileBean> pathFileBeanMap;
     private HashMap<String, Long> tagOffsetMap;
     private HashMap<String, TagBean> tagTagBeanMap;
-    private IFileOperator tagOperator;
-    private IFileOperator fileOperator;
+
     private Gson gson;
 
     private LocalDataStorage(Path dir, Path backup, Path tagTable, Path fileTable, Path info,IFileOperator tagOperator,IFileOperator fileOperator) throws IOException {
@@ -68,8 +69,8 @@ public class LocalDataStorage implements IDataStorage {
         this.tagTable = tagTable;
         this.fileTable = fileTable;
         this.info = info;
-        this.tagOperator = tagOperator == null ? new RafFileOperator() : tagOperator;
-        this.fileOperator = fileOperator == null ? new RafFileOperator() : fileOperator;
+        this.tagOperator = tagOperator == null ? new TextFileOperator() : tagOperator;
+        this.fileOperator = fileOperator == null ? new TextFileOperator() : fileOperator;
         this.tagOperator.load(tagTable);
         this.fileOperator.load(fileTable);
         init();

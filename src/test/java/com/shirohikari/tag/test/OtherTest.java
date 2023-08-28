@@ -47,7 +47,7 @@ public class OtherTest {
         for(int i=0;i<100;i++){
             tags[i] = "标签"+i;
         }
-        for(int j = 1;j<=50;j++){
+        for(int j = 1;j<=500;j++){
             for (int i = 1;i<=100;i++){
                 HashSet<String> l = new HashSet<>();
                 if(i % 6 == 0) l.add("tag1");

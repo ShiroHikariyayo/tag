@@ -29,14 +29,13 @@ public class TextFileOperator implements IFileOperator {
 
     private static final int BUFFER_LENGTH = 1024;
 
+    private final ByteBuffer buffer;
+    private final StringBuilder jsonBuilder;
     private FileChannel channel;
-    private ByteBuffer buffer;
-    private StringBuilder jsonBuilder;
 
     public TextFileOperator() {
         this.buffer = ByteBuffer.allocateDirect(BUFFER_LENGTH);
         this.jsonBuilder = new StringBuilder();
-        throw new RuntimeException("此实现未完成");
     }
 
     @Override
@@ -51,7 +50,6 @@ public class TextFileOperator implements IFileOperator {
 
     @Override
     public String readNext() throws IOException {
-        //todo
         long startPosition = channel.position();
         String json;
         int hasNext = channel.read(buffer);
@@ -67,11 +65,11 @@ public class TextFileOperator implements IFileOperator {
         }else {
             byte[] data = new byte[BUFFER_LENGTH];
             buffer.get(data,0,1020);
-            jsonBuilder.append(new String(data));
+            jsonBuilder.append(new String(data,0,1020));
             buffer.clear();
             int end = len - 1020;
             int strLen;
-            while (end > 0) {
+            do {
                 int r = channel.read(buffer);
                 if (r == -1) {
                     break;
@@ -82,7 +80,7 @@ public class TextFileOperator implements IFileOperator {
                 jsonBuilder.append(new String(data,0,strLen));
                 buffer.clear();
                 end -= BUFFER_LENGTH;
-            }
+            }while (end > 0);
             json = jsonBuilder.toString();
         }
         buffer.clear();
@@ -143,22 +141,9 @@ public class TextFileOperator implements IFileOperator {
     }
 
     @Override
-    public void setLength(long length) throws IOException {
-        //todo
-        //修不来
+    public void truncate(long length) throws IOException {
         long position = channel.position();
-        if(channel.size() >= length){
-            channel.truncate(length);
-        }else {
-            int len = (int) (length - channel.size());
-            byte[] emptyData = new byte[len];
-            ByteBuffer emptyBuffer = ByteBuffer.allocate(len);
-            emptyBuffer.put(emptyData);
-            emptyBuffer.flip();
-            channel.position(channel.size());
-            channel.write(emptyBuffer);
-            channel.force(false);
-        }
+        channel.truncate(length);
         channel.position(position);
     }
 

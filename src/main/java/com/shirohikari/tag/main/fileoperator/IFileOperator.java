@@ -89,11 +89,11 @@ public interface IFileOperator {
     void force() throws IOException;
 
     /**
-     * 设置文件大小
+     * 删去多余字节
      * @param length
      * @throws IOException
      */
-    void setLength(long length) throws IOException;
+    void truncate(long length) throws IOException;
 
     /**
      * 文件最大位置
