@@ -27,15 +27,22 @@ import java.nio.file.StandardOpenOption;
  */
 public class TextFileOperator implements IFileOperator {
 
-    private static final int BUFFER_LENGTH = 1024;
     private static final String VERSION = TextFileOperator.class.getName();
 
+    private final int bufferLength;
+    private final int noDefineBufferLength;
     private final ByteBuffer buffer;
     private final StringBuilder jsonBuilder;
     private FileChannel channel;
 
-    public TextFileOperator() {
-        this.buffer = ByteBuffer.allocateDirect(BUFFER_LENGTH);
+    public TextFileOperator(){
+        this(1024);
+    }
+
+    public TextFileOperator(int bufferLength) {
+        this.bufferLength = bufferLength;
+        this.noDefineBufferLength = bufferLength - Integer.BYTES;
+        this.buffer = ByteBuffer.allocateDirect(this.bufferLength);
         this.jsonBuilder = new StringBuilder();
     }
 
@@ -59,16 +66,16 @@ public class TextFileOperator implements IFileOperator {
         }
         buffer.flip();
         int len = buffer.getInt();
-        if(len <= 1020){
+        if(len <= noDefineBufferLength){
             byte[] data = new byte[len];
             buffer.get(data,0,len);
             json = new String(data);
         }else {
-            byte[] data = new byte[BUFFER_LENGTH];
-            buffer.get(data,0,1020);
-            jsonBuilder.append(new String(data,0,1020));
+            byte[] data = new byte[bufferLength];
+            buffer.get(data,0,noDefineBufferLength);
+            jsonBuilder.append(new String(data,0,noDefineBufferLength));
             buffer.clear();
-            int end = len - 1020;
+            int end = len - noDefineBufferLength;
             int strLen;
             do {
                 int r = channel.read(buffer);
@@ -76,11 +83,11 @@ public class TextFileOperator implements IFileOperator {
                     break;
                 }
                 buffer.flip();
-                strLen = Math.min(end, BUFFER_LENGTH);
+                strLen = Math.min(end, bufferLength);
                 buffer.get(data,0,strLen);
                 jsonBuilder.append(new String(data,0,strLen));
                 buffer.clear();
-                end -= BUFFER_LENGTH;
+                end -= bufferLength;
             }while (end > 0);
             json = jsonBuilder.toString();
         }
@@ -95,22 +102,22 @@ public class TextFileOperator implements IFileOperator {
         channel.position(channel.position());
         buffer.putInt(json.getBytes().length);
         int len = json.getBytes().length;
-        if(len <= 1020){
+        if(len <= noDefineBufferLength){
             buffer.put(json.getBytes());
             buffer.flip();
             channel.write(buffer);
-        }else if(len <= BUFFER_LENGTH){
-            writePart(json.getBytes(),0,1020);
-            writePart(json.getBytes(),1020,len - 1020);
+        }else if(len <= bufferLength){
+            writePart(json.getBytes(),0,noDefineBufferLength);
+            writePart(json.getBytes(),noDefineBufferLength,len - noDefineBufferLength);
         }else {
-            writePart(json.getBytes(),0,1020);
-            writePart(json.getBytes(),1020,4);
-            int start = BUFFER_LENGTH;
-            int end = len - BUFFER_LENGTH;
+            writePart(json.getBytes(),0,noDefineBufferLength);
+            writePart(json.getBytes(),noDefineBufferLength,Integer.BYTES);
+            int start = bufferLength;
+            int end = len - bufferLength;
             while (start < len) {
-                writePart(json.getBytes(),start,Math.min(end,BUFFER_LENGTH));
-                start += BUFFER_LENGTH;
-                end -= BUFFER_LENGTH;
+                writePart(json.getBytes(),start,Math.min(end, bufferLength));
+                start += bufferLength;
+                end -= bufferLength;
             }
         }
         buffer.clear();
