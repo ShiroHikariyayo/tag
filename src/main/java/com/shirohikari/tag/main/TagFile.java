@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 将标签和文件做关联,并不会对文件进行修改
@@ -104,6 +103,30 @@ public class TagFile {
      */
     public TagBean getTagBean(String tag){
         return dataStorage.getTagBean(tag);
+    }
+
+    /**
+     * 返回所有的FileBean
+     * @return
+     */
+    public List<FileBean> getFileBeans(){
+        return dataStorage.getFileBeans();
+    }
+
+    /**
+     * 获取标签数
+     * @return
+     */
+    public int tagSize() {
+        return dataStorage.tagSize();
+    }
+
+    /**
+     * 获取路径数
+     * @return
+     */
+    public int fileSize() {
+        return dataStorage.fileSize();
     }
 
     /**
@@ -190,10 +213,10 @@ public class TagFile {
             }
             for(Integer id:fileBeanIds){
                 FileBean fileBean = dataStorage.getFileBean(id);
-                fileBean.getTagSet().removeAll(tags);
+                tags.forEach(fileBean.getTagSet()::remove);
                 fileBeans.add(fileBean);
             }
-            List<FileBean> beans = fileBeans.stream().sorted(((o1, o2) -> o2.getId() - o1.getId())).collect(Collectors.toList());
+            List<FileBean> beans = fileBeans.stream().sorted(((o1, o2) -> o2.getId() - o1.getId())).toList();
             try {
                 for(FileBean bean:beans) {
                     if(!removeFileWhenNoTag(bean,0)){
@@ -216,7 +239,7 @@ public class TagFile {
     public void removeTag(String tag){
         TagBean tagBean = dataStorage.getTagBean(tag);
         if(tagBean != null){
-            List<FileBean> beans = getFileBeans(tag).stream().sorted(((o1, o2) -> o2.getId() - o1.getId())).collect(Collectors.toList());
+            List<FileBean> beans = getFileBeans(tag).stream().sorted(((o1, o2) -> o2.getId() - o1.getId())).toList();
             try {
                 for(FileBean bean:beans) {
                     bean.getTagSet().remove(tag);
@@ -258,7 +281,7 @@ public class TagFile {
      */
     public void addTagToFile(FileBean fileBean,TagBean tagBean){
         try {
-            if(tagBean.getIdSet().size() != 0 && !tagBean.equals(dataStorage.getTagBean(tagBean.getTag()))){
+            if(!tagBean.getIdSet().isEmpty() && !tagBean.equals(dataStorage.getTagBean(tagBean.getTag()))){
                 throw new RuntimeException("添加标签时不可手动设置idList");
             }
             fileBean.getTagSet().add(tagBean.getTag());
@@ -609,7 +632,7 @@ public class TagFile {
                 }
                 dataStorage.removeFileRecord(cacheBean);
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
             return true;
         }else {

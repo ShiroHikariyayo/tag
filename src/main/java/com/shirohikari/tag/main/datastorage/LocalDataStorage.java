@@ -168,6 +168,11 @@ public class LocalDataStorage implements IDataStorage {
     }
 
     @Override
+    public List<FileBean> getFileBeans() {
+        return new ArrayList<>(idFileBeanMap.values());
+    }
+
+    @Override
     public TagBean getTagBean(String tag){
         return tagTagBeanMap.get(tag);
     }
@@ -175,7 +180,7 @@ public class LocalDataStorage implements IDataStorage {
     @Override
     public void addFileRecord(FileBean bean) throws IOException {
         checkFileBean(bean,Operate.ADD);
-        bean.setId(nextId++);
+        bean.setId(++nextId);
         addToFileMaps(bean,fileEndOffset);
         String json = gson.toJson(bean);
         fileOperator.position(fileEndOffset);
@@ -306,6 +311,16 @@ public class LocalDataStorage implements IDataStorage {
         FileUtil.remove(Paths.get(backup.toString(),name));
         infoBean.getBackups().remove(name);
         FileUtil.saveFile(gson.toJson(infoBean).getBytes(),INFO,dir.toString());
+    }
+
+    @Override
+    public int tagSize() {
+        return tags.size();
+    }
+
+    @Override
+    public int fileSize() {
+        return idFileBeanMap.size();
     }
 
     private void updateOffset(String oldJson,String newJson,long offset,boolean file,int messageDefineLength) {

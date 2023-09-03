@@ -36,7 +36,7 @@ public class TagBean {
 
     public TagBean(String tag, HashSet<Integer> idSet) {
         this.tag = tag;
-        this.idSet = idSet;
+        this.idSet = new HashSet<>(idSet);
     }
 
     public String getTag() {
@@ -44,7 +44,7 @@ public class TagBean {
     }
 
     public void setTag(String tag) {
-        if(tag != null && !"".equals(tag)){
+        if(tag != null && !tag.isEmpty()){
             this.tag = tag;
         }else {
             throw new RuntimeException("标签不应为null或空字符串");

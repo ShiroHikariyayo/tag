@@ -20,6 +20,7 @@ import com.shirohikari.tag.main.bean.FileBean;
 import com.shirohikari.tag.main.bean.TagBean;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -68,6 +69,12 @@ public interface IDataStorage {
      * @return
      */
     FileBean getFileBean(String path);
+
+    /**
+     * 返回所有的FileBean
+     * @return
+     */
+     List<FileBean> getFileBeans();
 
     /**
      * 根据指定的标签返回TagBean
@@ -138,4 +145,16 @@ public interface IDataStorage {
      * @throws IOException
      */
     void removeBackup(String name) throws IOException;
+
+    /**
+     * 获取标签数
+     * @return
+     */
+    int tagSize();
+
+    /**
+     * 获取路径数
+     * @return
+     */
+    int fileSize();
 }
