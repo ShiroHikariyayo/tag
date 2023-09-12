@@ -84,7 +84,7 @@ public class TagFileTest {
         TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
         t.addTagToFile("E:\\test\\1","tag1");
         t.addTagToFile("E:\\test\\2","tag2");
-        FileBean fileBean = t.getFileBean(0);
+        FileBean fileBean = t.getFileBean(1);
         fileBean.getTagSet().remove("tag1");
         fileBean.getTagSet().add("tag3");
         t.updateFile(fileBean);
@@ -110,9 +110,15 @@ public class TagFileTest {
 
     @Test
     public void deleteTagToFile() throws IOException {
-        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
-        t.addTagToFile("E:\\test\\1","tag1");
-        t.addTagToFile("E:\\test\\1","tag2");
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"),true);
+        //t.addTagToFile("E:\\test\\1","tag1");
+        ///t.addTagToFile("E:\\test\\1","tag2");
+        HashSet<String> s = new HashSet<>();
+        s.add("tag1");
+        s.add("tag2");
+        FileBean bean = new FileBean("E:\\test\\1","desc");
+        bean.setTagSet(s);
+        t.addTagToFile(bean);
         t.addTagToFile("E:\\test\\2","tag2");
         t.deleteTagToFile("E:\\test\\1","tag1");
         t.deleteTagToFile("E:\\test\\1","tag1");

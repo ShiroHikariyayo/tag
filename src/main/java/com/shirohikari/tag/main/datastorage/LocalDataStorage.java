@@ -45,7 +45,7 @@ public class LocalDataStorage implements IDataStorage {
     private static final String INFO = "info";
     private static final String BACKUP = "backup";
 
-    private int nextId;
+    private int curId;
     private long tagEndOffset;
     private long fileEndOffset;
     private final Path dir;
@@ -118,7 +118,7 @@ public class LocalDataStorage implements IDataStorage {
             long offset = fileOperator.position();
             String json = fileOperator.readNext();
             FileBean bean = gson.fromJson(json,FileBean.class);
-            nextId = bean.getId() + 1;
+            curId = bean.getId() + 1;
             addToFileMaps(bean,offset);
         }
         System.gc();
@@ -180,7 +180,7 @@ public class LocalDataStorage implements IDataStorage {
     @Override
     public void addFileRecord(FileBean bean) throws IOException {
         checkFileBean(bean,Operate.ADD);
-        bean.setId(++nextId);
+        bean.setId(++curId);
         addToFileMaps(bean,fileEndOffset);
         String json = gson.toJson(bean);
         fileOperator.position(fileEndOffset);
@@ -387,8 +387,8 @@ public class LocalDataStorage implements IDataStorage {
             throw new IOException("文件路径不应为null");
         }
         if(operate == Operate.ADD){
-            if(bean.getTagSet() == null || bean.getTagSet().isEmpty()){
-                throw new IOException("FileBean为必须至少含有一个tag");
+            if(bean.getTagSet() == null){
+                throw new IOException("FileBean中tagSet不应为null");
             }else if(bean.getId() != null){
                 throw new IOException("插入时不允许手动设置FileBean的id");
             }
@@ -421,7 +421,7 @@ public class LocalDataStorage implements IDataStorage {
                 throw new IOException("不可添加已有的tag");
             }
             if(!bean.getIdSet().isEmpty()){
-                throw new IOException("创建新标签时不可手动指定idList");
+                throw new IOException("创建新标签时不可手动指定idSet");
             }
         }else{
             if(!tagTagBeanMap.containsKey(bean.getTag())){

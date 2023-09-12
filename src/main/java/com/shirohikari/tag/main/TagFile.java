@@ -33,14 +33,24 @@ import java.util.Set;
  * @author ShiroHikariyayo
  */
 public class TagFile {
+
+    private final boolean saveHavingDescription;
     private final IDataStorage dataStorage;
 
     /**
      * @param dataStorage 持久化文件储存位置
-     * @throws IOException
      */
-    public TagFile(IDataStorage dataStorage) throws IOException {
+    public TagFile(IDataStorage dataStorage) {
+        this(dataStorage,false);
+    }
+
+    /**
+     * @param dataStorage 持久化文件储存位置
+     * @param saveHavingDescription 是否保存没有标签但有描述的文件
+     */
+    public TagFile(IDataStorage dataStorage,boolean saveHavingDescription) {
         this.dataStorage = dataStorage;
+        this.saveHavingDescription = saveHavingDescription;
     }
 
     /**
@@ -137,7 +147,7 @@ public class TagFile {
         try {
             dataStorage.backup(name);
         } catch (IOException e) {
-            throw  new RuntimeException(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -282,7 +292,7 @@ public class TagFile {
     public void addTagToFile(FileBean fileBean,TagBean tagBean){
         try {
             if(!tagBean.getIdSet().isEmpty() && !tagBean.equals(dataStorage.getTagBean(tagBean.getTag()))){
-                throw new RuntimeException("添加标签时不可手动设置idList");
+                throw new RuntimeException("添加标签时不可手动设置IdSet");
             }
             fileBean.getTagSet().add(tagBean.getTag());
             if (dataStorage.hasFile(fileBean.getPath())){
@@ -355,7 +365,10 @@ public class TagFile {
      */
     public void addTagToFile(FileBean fileBean){
         if(fileBean == null || fileBean.getId() != null || dataStorage.getFileBean(fileBean.getPath()) != null){
-            throw new RuntimeException("传入的bean必须为未在表内的bean");
+            throw new RuntimeException("传入的bean必须为未在表内的bean且不允许设置id");
+        }
+        if(!saveHavingDescription && fileBean.getTagSet().isEmpty()){
+            throw new RuntimeException("传入的bean必须含有标签");
         }
         try {
             dataStorage.addFileRecord(fileBean);
@@ -623,6 +636,9 @@ public class TagFile {
     private boolean removeFileWhenNoTag(FileBean bean,int size){
         FileBean cacheBean = dataStorage.getFileBean(bean.getPath());
         if(cacheBean != null && bean.getTagSet().size() == size){
+            if (saveHavingDescription && !cacheBean.getDescription().isEmpty()){
+                return false;
+            }
             try {
                 for (String tag:dataStorage.getAllTags()){
                     TagBean tagBean = dataStorage.getTagBean(tag);

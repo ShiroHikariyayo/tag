@@ -47,7 +47,7 @@ public class OtherTest {
         for(int i=0;i<100;i++){
             tags[i] = "标签"+i;
         }
-        for(int j = 1;j<=500;j++){
+        for(int j = 1;j<=50;j++){
             for (int i = 1;i<=100;i++){
                 HashSet<String> l = new HashSet<>();
                 if(i % 6 == 0) l.add("tag1");
@@ -62,6 +62,24 @@ public class OtherTest {
             System.gc();
         }
         long s2 = System.currentTimeMillis();
+        System.out.println("time consume:"+(s2-s1));
+    }
+
+    @Test
+    public void saveHavingDescription() throws IOException {
+        long s1 = System.currentTimeMillis();
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"),true);
+        for(int j = 1;j<=50;j++){
+            for (int i = 1;i<=100;i++){
+                HashSet<String> l = new HashSet<>();
+                l.add("tag1");
+                if(i % 2 == 0) l.add("tag2");
+                t.addTagToFile(new FileBean("E:\\Pictures\\comic\\蘑菇的擬態日常\\第0"+j+"话\\"+i+".webp","this is a bean"+j+":"+i,l));
+            }
+            System.gc();
+        }
+        long s2 = System.currentTimeMillis();
+        t.removeTag("tag1");
         System.out.println("time consume:"+(s2-s1));
     }
 
