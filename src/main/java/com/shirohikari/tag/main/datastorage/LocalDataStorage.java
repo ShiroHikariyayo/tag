@@ -407,7 +407,7 @@ public class LocalDataStorage implements IDataStorage {
             }
         }else if(operate == Operate.REMOVE){
             if(!bean.getId().equals(id)){
-                throw new IOException("禁止修改id或path");
+                throw new IOException("移除FileBean时禁止修改id或path");
             }
         }
     }

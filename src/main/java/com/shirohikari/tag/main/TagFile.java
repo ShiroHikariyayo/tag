@@ -535,6 +535,8 @@ public class TagFile {
                 }else {
                     intersection.retainAll(tagBean.getIdSet());
                 }
+            }else {
+                return new HashSet<>();
             }
         }
         return intersection;
@@ -633,20 +635,25 @@ public class TagFile {
         }
     }
 
+    /**
+     * 如果没有标签则移除文件记录
+     * @param bean 确保已经被存入IDataStorage中的FileBean
+     * @param size
+     * @return
+     */
     private boolean removeFileWhenNoTag(FileBean bean,int size){
-        FileBean cacheBean = dataStorage.getFileBean(bean.getPath());
-        if(cacheBean != null && bean.getTagSet().size() == size){
-            if (saveHavingDescription && !cacheBean.getDescription().isEmpty()){
+        if(bean.getTagSet().size() == size){
+            if (saveHavingDescription && !bean.getDescription().isEmpty()){
                 return false;
             }
             try {
                 for (String tag:dataStorage.getAllTags()){
                     TagBean tagBean = dataStorage.getTagBean(tag);
-                    if(tagBean.getIdSet().remove(cacheBean.getId())){
+                    if(tagBean.getIdSet().remove(bean.getId())){
                         dataStorage.updateTagRecord(tagBean);
                     }
                 }
-                dataStorage.removeFileRecord(cacheBean);
+                dataStorage.removeFileRecord(bean);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

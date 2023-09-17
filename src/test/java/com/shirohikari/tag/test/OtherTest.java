@@ -74,12 +74,16 @@ public class OtherTest {
                 HashSet<String> l = new HashSet<>();
                 l.add("tag1");
                 if(i % 2 == 0) l.add("tag2");
-                t.addTagToFile(new FileBean("E:\\Pictures\\comic\\蘑菇的擬態日常\\第0"+j+"话\\"+i+".webp","this is a bean"+j+":"+i,l));
+                FileBean bean = new FileBean("E:\\Pictures\\comic\\蘑菇的擬態日常\\第0"+j+"话\\"+i+".webp","this is a bean"+j+":"+i,l);
+                t.addTagToFile(bean);
+                l.remove("tag1");
+                FileBean newFileBean = new FileBean(bean.getId(),bean.getPath(),"",l);
+                t.updateFile(newFileBean);
             }
             System.gc();
         }
         long s2 = System.currentTimeMillis();
-        t.removeTag("tag1");
+        //t.removeTag("tag1");
         System.out.println("time consume:"+(s2-s1));
     }
 

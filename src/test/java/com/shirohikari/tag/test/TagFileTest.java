@@ -42,7 +42,7 @@ public class TagFileTest {
         t.addTagToFile(new FileBean("E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\1.webp","数据1",l),new TagBean("t5"));
         t.addTagToFile("E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\2.webp","tag1");
         t.addTagToFile("E:\\Pictures\\comic\\幸福观鸟\\1.第01话\\2.webp","tag2");
-        t.addTagToFile(t.getFileBean(0),new TagBean("t6"));
+        t.addTagToFile(t.getFileBean(1),new TagBean("t6"));
     }
 
     @Test
@@ -133,7 +133,7 @@ public class TagFileTest {
         t.addTagToFile("E:\\test\\1","tag1");
         t.addTagToFile("E:\\test\\1","tag2");
         t.addTagToFile("E:\\test\\1","tag3");
-        FileBean f = t.getFileBean(0);
+        FileBean f = t.getFileBean(1);
         f.getTagSet().remove("tag1");
         f.getTagSet().add("tag4");
         t.deleteTagToFile(f,new TagBean("tag2"));
@@ -226,5 +226,17 @@ public class TagFileTest {
         System.out.println(t.getFilePaths("标签1"));
         System.out.println("========================================");
         System.out.println(t.getFilePaths(tags));
+    }
+
+    @Test
+    public void removeFileWhenNoTag() throws IOException {
+        TagFile t = new TagFile(LocalDataStorage.create("E:\\test"));
+        HashSet<String> set = new HashSet<>();
+        set.add("t1");
+        FileBean bean = new FileBean("E:\\test\\1","desc1",set);
+        t.addTagToFile(bean);
+        bean.setPath("E:\\test\\2");
+        bean.getTagSet().clear();
+        t.updateFile(bean);
     }
 }
